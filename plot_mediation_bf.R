@@ -1,3 +1,5 @@
+library(tidyverse)
+
 ## Plot function
 plot_bf <- function(med_bf_object, 
                     med_annot, 
@@ -30,7 +32,7 @@ plot_bf <- function(med_bf_object,
   gap <- sum(chr_lengths(map))/100
   
   lim_shift <- (max(bf[,1]) - min(bf[,1])) * expand_lim_factor
-  plot(bf, map = med_map, ylab = "Log Bayes factor", type = "p", pch = 20, ylim = c(min(bf[,1]) - lim_shift, max(bf[,1]) + lim_shift),
+  qtl2:::plot.scan1(bf, map = med_map, ylab = "Log Bayes factor", type = "p", pch = 20, ylim = c(min(bf[,1]) - lim_shift, max(bf[,1]) + lim_shift),
        bgcol = bgcol, altcol = altcol, altbgcol = altbgcol, hlines_col = hlines_col, col = col, cex = cex, gap = gap,
        ...)
   
