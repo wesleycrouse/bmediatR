@@ -15,7 +15,7 @@ plot_bf <- function(med_bf_object,
   bf_type <- bf_type[1]
   
   bf <- matrix(med_bf_object$lnBF, ncol = 1)
-  rownames(bf) <- names(med_bf_object$lnBF)
+  rownames(bf) <- names(med_bf_object[bf_type])
   class(bf) <- "scan1"
   
   med_map_df <- med_annot %>%
