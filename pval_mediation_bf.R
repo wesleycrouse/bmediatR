@@ -63,8 +63,7 @@ get_perm_pval <- function(y,
     } 
     print(paste("Perm", i, "done out of", num_perm))
   }
-  
   perm_pval <- sapply(1:ncol(perm_bf_mat), function(i) mean(actual_bf$lnBF_med[i] < perm_bf_mat[,i]))
-  bf_dat <- data.frame(protein.id = names(actual_bf$lnBF_med), lnBF_med = actual_bf$lnBF_med, perm_pval = perm_pval)
+  bf_dat <- data.frame(mediator = colnames(M), lnBF_med = actual_bf$lnBF_med, perm_pval = perm_pval)
   bf_dat
 }
