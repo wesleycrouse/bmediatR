@@ -221,10 +221,3 @@ mediation_bf <- function(y, M, X, Z = NULL, w = NULL,
   if(verbose){print("Done", quote=F)}
   list(lnBF_med=lnBF_med, lnBF_coloc=lnBF_coloc, lnp_data_H=lnp_data_H, ln_post_med=ln_post_med)
 }
-
-
-
-
-
-
-
