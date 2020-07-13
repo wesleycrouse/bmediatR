@@ -62,7 +62,8 @@ mediation_bf <- function(y, M, X, Z = NULL, w = NULL,
                          tau_sq_Z = rep(1000, 4),
                          phi_sq_X = c(NA, 1, 1, 0.5),
                          phi_sq_m = 0.5,
-                         p_c = c(1/3, 1/3, 1/3),
+                         p_cm = c(1/3, 1/3, 1/3),
+                         p_cc = c(1/3, 1/3, 1/3),
                          p_med = 0.5,
                          verbose = T){
   if(verbose){print("Initializing", quote=F)}
@@ -197,9 +198,9 @@ mediation_bf <- function(y, M, X, Z = NULL, w = NULL,
   #compute Bayes factors
   lnBF_numerator_med <- lnp_data_H[,3] + lnp_data_H[,4]
   
-  lnBF_denominator_med <- rbind(lnp_data_H[,1] + lnp_data_H[,2] + log(p_c[1]),
-                                lnp_data_H[,1] + lnp_data_H[,4] + log(p_c[2]),
-                                lnp_data_H[,3] + lnp_data_H[,2] + log(p_c[3]))
+  lnBF_denominator_med <- rbind(lnp_data_H[,1] + lnp_data_H[,2] + log(p_cm[1]),
+                                lnp_data_H[,1] + lnp_data_H[,4] + log(p_cm[2]),
+                                lnp_data_H[,3] + lnp_data_H[,2] + log(p_cm[3]))
   lnBF_denominator_med <- apply(lnBF_denominator_med, 2, matrixStats::logSumExp)
   
   lnBF_med<- lnBF_numerator_med - lnBF_denominator_med
@@ -210,9 +211,9 @@ mediation_bf <- function(y, M, X, Z = NULL, w = NULL,
   #compute co-local Bayes factors
   lnBF_numerator_coloc <- lnp_data_H[,3] + lnp_data_H[,2]
   
-  lnBF_denominator_coloc <- rbind(lnp_data_H[,1] + lnp_data_H[,2] + log(p_c[1]),
-                                  lnp_data_H[,1] + lnp_data_H[,4] + log(p_c[2]),
-                                  lnp_data_H[,3] + lnp_data_H[,4] + log(p_c[3]))
+  lnBF_denominator_coloc <- rbind(lnp_data_H[,1] + lnp_data_H[,2] + log(p_cc[1]),
+                                  lnp_data_H[,1] + lnp_data_H[,4] + log(p_cc[2]),
+                                  lnp_data_H[,3] + lnp_data_H[,4] + log(p_cc[3]))
   lnBF_denominator_coloc <- apply(lnBF_denominator_coloc, 2, matrixStats::logSumExp)
   
   lnBF_coloc <- lnBF_numerator_coloc - lnBF_denominator_coloc
