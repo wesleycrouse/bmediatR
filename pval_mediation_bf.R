@@ -1,12 +1,12 @@
 get_approx_pval <- function(med_bf_object,
                             annot) {
   
-  bf_dat <- data.frame(protein.id = names(med_bf_object$lnBF), lnBF = med_bf_object$lnBF) %>%
+  bf_dat <- data.frame(protein.id = names(med_bf_object$lnBF_med), lnBF = med_bf_object$lnBF_med) %>%
     left_join(annot)
   
   approx_pval <- nrow(bf_dat)
   for (i in 1:nrow(bf_dat)) {
-    approx_pval[i] <- mean(c(bf_dat$lnBF[i] < (bf_dat %>% filter(chr != bf_dat$chr[i]) %>% pull(lnBF)), TRUE))
+    approx_pval[i] <- mean(c(bf_dat$lnBF_med[i] < (bf_dat %>% filter(chr != bf_dat$chr[i]) %>% pull(lnBF_med)), TRUE))
   }
   bf_dat$approx_pval <- approx_pval
   bf_dat
@@ -59,12 +59,12 @@ get_perm_pval <- function(y,
                                X = X,
                                Z = Z, 
                                verbose = verbose)
-      perm_bf_mat[i, j] <- perm_med$lnBF
+      perm_bf_mat[i, j] <- perm_med$lnBF_med
     } 
     print(paste("Perm", i, "done out of", num_perm))
   }
   
-  perm_pval <- sapply(1:ncol(perm_bf_mat), function(i) mean(actual_bf$lnBF[i] < perm_bf_mat[,i]))
-  bf_dat <- data.frame(protein.id = names(actual_bf$lnBF), lnBF = actual_bf$lnBF, perm_pval = perm_pval)
+  perm_pval <- sapply(1:ncol(perm_bf_mat), function(i) mean(actual_bf$lnBF_med[i] < perm_bf_mat[,i]))
+  bf_dat <- data.frame(protein.id = names(actual_bf$lnBF_med), lnBF_med = actual_bf$lnBF_med, perm_pval = perm_pval)
   bf_dat
 }

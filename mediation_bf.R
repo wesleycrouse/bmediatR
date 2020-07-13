@@ -195,21 +195,30 @@ mediation_bf <- function(y, M, X, Z = NULL, w = NULL,
   }
   
   #compute Bayes factors
-  lnBF_numerator <- lnp_data_H[,3] + lnp_data_H[,4]
+  lnBF_numerator_med <- lnp_data_H[,3] + lnp_data_H[,4]
   
-  lnBF_denominator <- rbind(lnp_data_H[,1] + lnp_data_H[,2] + log(p_c[1]),
-                            lnp_data_H[,1] + lnp_data_H[,4] + log(p_c[2]),
-                            lnp_data_H[,3] + lnp_data_H[,2] + log(p_c[3]))
+  lnBF_denominator_med <- rbind(lnp_data_H[,1] + lnp_data_H[,2] + log(p_c[1]),
+                                lnp_data_H[,1] + lnp_data_H[,4] + log(p_c[2]),
+                                lnp_data_H[,3] + lnp_data_H[,2] + log(p_c[3]))
+  lnBF_denominator_med <- apply(lnBF_denominator_med, 2, matrixStats::logSumExp)
   
-  lnBF_denominator <- apply(lnBF_denominator, 2, matrixStats::logSumExp)
-  
-  lnBF <- lnBF_numerator - lnBF_denominator
+  lnBF_med<- lnBF_numerator_med - lnBF_denominator_med
   
   #computer posterior probabilities of mediation
-  ln_post_med <- lnBF + log(p_med) - apply(rbind(lnBF+log(p_med), log(1-p_med)) , 2, matrixStats::logSumExp)
+  ln_post_med <- lnBF_med + log(p_med) - apply(rbind(lnBF_med+log(p_med), log(1-p_med)) , 2, matrixStats::logSumExp)
+  
+  #compute co-local Bayes factors
+  lnBF_numerator_coloc <- lnp_data_H[,3] + lnp_data_H[,2]
+  
+  lnBF_denominator_coloc <- rbind(lnp_data_H[,1] + lnp_data_H[,2] + log(p_c[1]),
+                                  lnp_data_H[,1] + lnp_data_H[,4] + log(p_c[2]),
+                                  lnp_data_H[,3] + lnp_data_H[,4] + log(p_c[3]))
+  lnBF_denominator_coloc <- apply(lnBF_denominator_coloc, 2, matrixStats::logSumExp)
+  
+  lnBF_coloc <- lnBF_numerator_coloc - lnBF_denominator_coloc
   
   if(verbose){print("Done", quote=F)}
-  list(lnBF=lnBF, lnp_data_H=lnp_data_H, ln_post_med=ln_post_med)
+  list(lnBF_med=lnBF_med, lnBF_coloc=lnBF_coloc, lnp_data_H=lnp_data_H, ln_post_med=ln_post_med)
 }
 
 

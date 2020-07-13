@@ -2,6 +2,7 @@ library(tidyverse)
 
 ## Plot function
 plot_bf <- function(med_bf_object, 
+                    bf_type = c("lnBF_med", "lnBF_coloc"),
                     med_annot, 
                     include_chr = c(1:19, "X"), 
                     expand_lim_factor = 0.025, 
@@ -10,6 +11,8 @@ plot_bf <- function(med_bf_object,
                     qtl_dat = NULL,
                     outcome_symbol = NULL,
                     ...) {
+  
+  bf_type <- bf_type[1]
   
   bf <- matrix(med_bf_object$lnBF, ncol = 1)
   rownames(bf) <- names(med_bf_object$lnBF)
