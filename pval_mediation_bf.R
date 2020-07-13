@@ -33,7 +33,7 @@ get_perm_pval <- function(y,
   original_name <- NULL
   perm_mat <- NULL
   for (i in 1:nrow(within_cov)) {
-    sub_Z <- Z[apply(Z, 1, function(x) paste(x, collapse = "")) == paste(within_cov[i,], collapse = ""),]
+    sub_Z <- Z[apply(Z, 1, function(x) paste(x, collapse = "")) == paste(within_cov[i,], collapse = ""),, drop = FALSE]
     sub_original_name <- rownames(sub_Z)
     sub_perm_mat <- matrix(NA, nrow = nrow(sub_Z), ncol = num_perm)
     for (j in 1:num_perm) {
