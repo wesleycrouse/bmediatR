@@ -203,7 +203,7 @@ mediation_bf <- function(y, M, X, Z = NULL, w = NULL,
                                 lnp_data_H[,3] + lnp_data_H[,2] + log(p_cm[3]))
   lnBF_denominator_med <- apply(lnBF_denominator_med, 2, matrixStats::logSumExp)
   
-  lnBF_med<- lnBF_numerator_med - lnBF_denominator_med
+  lnBF_med <- lnBF_numerator_med - lnBF_denominator_med
   
   #computer posterior probabilities of mediation
   ln_post_med <- lnBF_med + log(p_med) - apply(rbind(lnBF_med+log(p_med), log(1-p_med)) , 2, matrixStats::logSumExp)
@@ -220,4 +220,167 @@ mediation_bf <- function(y, M, X, Z = NULL, w = NULL,
   
   if(verbose){print("Done", quote=F)}
   list(lnBF_med=lnBF_med, lnBF_coloc=lnBF_coloc, lnp_data_H=lnp_data_H, ln_post_med=ln_post_med)
+}
+
+#now requires a specifying prior over the 4 cases, not just the 3 cases in the denominator of each BF 
+#posteriors over the 4 cases are reported in ln_post_c; co-local is column 3 and mediator is column 4
+#BFs for mediation and co-local are calculated by reweighing the prior
+mediation_bf_v2 <- function(y, M, X, Z = NULL, w = NULL,
+                         kappa = rep(0.001, 4),
+                         lambda = rep(0.001, 4),
+                         tau_sq_mu = rep(1000, 4),
+                         tau_sq_Z = rep(1000, 4),
+                         phi_sq_X = c(NA, 1, 1, 0.5),
+                         phi_sq_m = 0.5,
+                         ln_prior_c = rep(log(0.25), 4),
+                         verbose = T){
+  if(verbose){print("Initializing", quote=F)}
+  
+  #dimensions
+  n <- nrow(X)
+  d <- ncol(X)-1
+  p <- ncol(Z)
+  
+  #default values for w and Z
+  if (is.null(w)){w <- rep(1, n)}
+  if (is.null(Z)){Z <- matrix(NA, n, 0); p <- 0}
+  
+  #ensure M and Z are matrices
+  M <- as.matrix(M)
+  Z <- as.matrix(Z)
+  
+  #drop observations with missing y
+  complete.y <- !is.na(y)
+  
+  y <- y[complete.y]
+  M <- M[complete.y,,drop=F]
+  X <- X[complete.y,,drop=F]
+  Z <- Z[complete.y,,drop=F]
+  w <- w[complete.y]
+  
+  #scale y, M, and Z
+  y <- c(scale(y))
+  M <- apply(M, 2, scale)
+  if (p > 0){Z <- apply(Z, 2, scale)}
+  
+  #precomputed quantities for design matrices
+  C <- sumtozero_contrast(ncol(X))
+  XC <- X%*%C
+  ones <- matrix(1, nrow(XC))
+  
+  #design matrices for H1-H3 complete case
+  #H1: mediator m does not depend on X
+  #H2: trait y depends on X but not on mediator m
+  #H3: mediator m depends on X
+  #H4: trait y depends on X and mediator m
+  #all have covariates Z
+  X1 <- cbind(ones, Z)
+  X2 <- cbind(ones, XC, Z)
+  X3 <- X2
+  
+  #check if all scale hyperparameters are identical for H2 and H3
+  #implies sigma2 and sigma3 identical, used to reduce computations
+  sigma3_equal_sigma2 <- all(lambda[2]==lambda[3],
+                             tau_sq_mu[2] == tau_sq_mu[3], 
+                             phi_sq_X[2] == phi_sq_X[3],
+                             tau_sq_Z[2] == tau_sq_Z[3])
+  
+  #prior variance matrices (diagonal) for H1-H4 
+  v1 <- c(tau_sq_mu[1], rep(tau_sq_Z[1], p))
+  v2 <- c(tau_sq_mu[2], rep(phi_sq_X[2], d), rep(tau_sq_Z[2], p))
+  v4 <- c(tau_sq_mu[4], rep(phi_sq_X[4], d), rep(tau_sq_Z[4], p), phi_sq_m)
+  
+  if (!sigma3_equal_sigma2){
+    v3 <- c(tau_sq_mu[3], rep(phi_sq_X[3], d), rep(tau_sq_Z[3], p))
+  }
+  
+  #scale matrices for H1-H3 complete case
+  sigma1 <- crossprod(sqrt(lambda[1]*v1)*t(X1))
+  sigma2 <- crossprod(sqrt(lambda[2]*v2)*t(X2))
+  
+  diag(sigma1) <- diag(sigma1) + lambda[1]/w
+  diag(sigma2) <- diag(sigma2) + lambda[2]/w
+  
+  if (!sigma3_equal_sigma2){
+    sigma3 <- crossprod(sqrt(lambda[3]*v3)*t(X3))
+    diag(sigma3) <- diag(sigma3) + lambda[3]/w
+  }
+  
+  #object to store likelihoods
+  lnp_data_H=matrix(NA, ncol(M), 4)
+  rownames(lnp_data_H) <- colnames(M)
+  colnames(lnp_data_H) <- c("H1", "H2", "H3", "H4")
+  
+  #identify batches of M that have the same pattern of missing values
+  missing_m <- batch_cols(M)
+  
+  #iterate over batches of M with same pattern of missing values
+  if(verbose){print("Iterating", quote=F)}
+  counter <- 0
+  
+  for (b in 1:length(missing_m)){
+    #subset to non-missing observations
+    index <- rep(T, length(y))
+    index[missing_m[[b]]$omit] <- F
+    
+    y_subset <- y[index]
+    w_subset <- w[index]
+    
+    #cholesky matrices for H1-H3 non-missing observations
+    sigma1_chol_subset <- chol(sigma1[index,index])
+    sigma2_chol_subset <- chol(sigma2[index,index])
+    
+    if (sigma3_equal_sigma2){
+      sigma3_chol_subset <- sigma2_chol_subset
+    } else {
+      sigma3_chol_subset <- chol(sigma3[index,index])
+    }
+    
+    #compute H2 outside of the mediator loop (invariant)
+    lnp_data_H2 <- dmvt_chol(y_subset, sigma_chol=sigma2_chol_subset, df = kappa[2])
+    
+    #iterate over mediators
+    for (i in missing_m[[b]]$cols){
+      counter <- counter + 1
+      if (counter%%1000==0 & verbose){print(paste(counter, "of", ncol(M)), quote=F)}
+      
+      #set current mediator non-missing observations
+      m_subset <- M[index,i]
+      
+      #design matrix for H4 non-missing observations
+      X4_subset <- cbind(X2[index,,drop=F], m_subset)
+      
+      #scale and cholesky matrices for H4 non-missing observations
+      sigma4_subset <- crossprod(sqrt(lambda[4]*v4)*t(X4_subset))
+      diag(sigma4_subset) <- lambda[4]/w_subset + diag(sigma4_subset)
+      sigma4_chol_subset <- chol(sigma4_subset)
+      
+      #compute likelihoods for H1-H4
+      lnp_data_H[i,2] <- lnp_data_H2
+      lnp_data_H[i,1] <- dmvt_chol(m_subset, sigma_chol=sigma1_chol_subset, df = kappa[1])
+      lnp_data_H[i,3] <- dmvt_chol(m_subset, sigma_chol=sigma3_chol_subset, df = kappa[3])
+      lnp_data_H[i,4] <- dmvt_chol(y_subset, sigma_chol=sigma4_chol_subset, df = kappa[4])
+    }
+  }
+  
+  #compute posterior probabilities
+  ln_post_c <- cbind(lnp_data_H[,1] + lnp_data_H[,2] + ln_prior_c[1],
+                     lnp_data_H[,1] + lnp_data_H[,4] + ln_prior_c[2],
+                     lnp_data_H[,3] + lnp_data_H[,2] + ln_prior_c[3],
+                     lnp_data_H[,3] + lnp_data_H[,4] + ln_prior_c[4])
+  ln_post_c <- ln_post_c - apply(ln_post_c, 1, matrixStats::logSumExp)
+  
+  #compute mediation Bayes factors
+  lnBF_numerator_med <- ln_post_c[,4] - ln_prior_c[4]
+  lnBF_denominator_med <- apply(ln_post_c[,-4] - VGAM::log1mexp(-ln_prior_c[4]), 1, matrixStats::logSumExp)
+  lnBF_med <- lnBF_numerator_med - lnBF_denominator_med
+  
+  #compute co-local Bayes factors
+  lnBF_numerator_coloc <- ln_post_c[,3] - ln_prior_c[3]
+  lnBF_denominator_coloc <- apply(ln_post_c[,-3] - VGAM::log1mexp(-ln_prior_c[3]), 1, matrixStats::logSumExp)
+  lnBF_coloc <- lnBF_numerator_coloc - lnBF_denominator_coloc
+  
+  #return results
+  if(verbose){print("Done", quote=F)}
+  list(lnBF_med=lnBF_med, lnBF_coloc=lnBF_coloc, lnp_data_H=lnp_data_H, ln_post_c=ln_post_c)
 }
