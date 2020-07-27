@@ -18,14 +18,15 @@ get_perm_pval <- function(y,
                           Z = NULL,
                           num_perm = 1000,
                           verbose = FALSE,
+                          bf_type = "lnBF_totmed",
                           ...) {
   
-  actual_bf <- mediation_bf(y = y, 
-                            M = M, 
-                            X = X,
-                            Z = Z,
-                            verbose = verbose,
-                            ...)
+  actual_bf <- mediation_bf_v3(y = y, 
+                               M = M, 
+                               X = X,
+                               Z = Z,
+                               verbose = verbose,
+                               ...)
   
   if (is.null(Z)) { Z <- matrix(1, nrow = nrow(M)); rownames(Z) <- rownames(M) }
   
@@ -60,11 +61,15 @@ get_perm_pval <- function(y,
                                   Z = Z, 
                                   verbose = verbose,
                                   ...)
-      perm_bf_mat[i, j] <- perm_med$lnBF_med
+      perm_bf_mat[i, j] <- perm_med[[bf_type]]
     } 
     print(paste("Perm", i, "done out of", num_perm))
   }
-  perm_pval <- sapply(1:ncol(perm_bf_mat), function(i) mean(actual_bf$lnBF_med[i] < perm_bf_mat[,i]))
-  bf_dat <- data.frame(mediator = colnames(M), lnBF_med = actual_bf$lnBF_med, perm_pval = perm_pval, thresh = apply(perm_bf_mat, 2, function(x) quantile(x, probs = 0.95)))
+  perm_pval <- sapply(1:ncol(perm_bf_mat), function(i) mean(actual_bf[[bf_type]][i] < perm_bf_mat[,i]))
+  bf_dat <- data.frame(mediator = colnames(M), 
+                       bf = actual_bf[[bf_type]], 
+                       perm_pval = perm_pval, 
+                       thresh = apply(perm_bf_mat, 2, function(x) quantile(x, probs = 0.95)))
+  names(bf_dat)[which(names(bf_dat) == "bf")] <- bf_type
   bf_dat
 }
