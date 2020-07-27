@@ -386,16 +386,13 @@ mediation_bf_v2 <- function(y, M, X, Z = NULL, w = NULL,
   list(lnBF_med=lnBF_med, lnBF_coloc=lnBF_coloc, lnp_data_H=lnp_data_H, ln_post_c=ln_post_c)
 }
 
-
-
-
 mediation_bf_v3 <- function(y, M, X, Z = NULL, w = NULL,
                             kappa = rep(0.001, 6),
                             lambda = rep(0.001, 6),
                             tau_sq_mu = rep(1000, 6),
                             tau_sq_Z = rep(1000, 6),
                             phi_sq_X = c(NA, 1, 1, 0.5, NA, NA),
-                            phi_sq_m = c(NA, NA, NA, 0.5, NA, 0.5),
+                            phi_sq_m = c(NA, NA, NA, 0.5, NA, 1),
                             ln_prior_c = rep(log(1/8), 8),
                             verbose = T){
   if(verbose){print("Initializing", quote=F)}
