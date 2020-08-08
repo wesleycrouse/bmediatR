@@ -395,7 +395,7 @@ mediation_bf_v3 <- function(y, M, X, Z = NULL, w = NULL,
                             phi_sq_m = c(NA, NA, NA, 0.5, NA, 1),
                             ln_prior_c = rep(log(1/8), 8),
                             verbose = T){
-  if(verbose){print("Initializing", quote=F)}
+  if (verbose){print("Initializing", quote=F)}
   
   #dimensions
   n <- nrow(X)
@@ -428,7 +428,6 @@ mediation_bf_v3 <- function(y, M, X, Z = NULL, w = NULL,
   C <- sumtozero_contrast(ncol(X))
   XC <- X%*%C
   ones <- matrix(1, nrow(XC))
-  
   
   #design matrices for H1-H3 complete case
   #H1: mediator m does not depend on X
@@ -496,7 +495,7 @@ mediation_bf_v3 <- function(y, M, X, Z = NULL, w = NULL,
   missing_m <- batch_cols(M)
   
   #iterate over batches of M with same pattern of missing values
-  if(verbose){print("Iterating", quote=F)}
+  if (verbose){print("Iterating", quote=F)}
   counter <- 0
   
   for (b in 1:length(missing_m)){
@@ -504,58 +503,60 @@ mediation_bf_v3 <- function(y, M, X, Z = NULL, w = NULL,
     index <- rep(T, length(y))
     index[missing_m[[b]]$omit] <- F
     
-    y_subset <- y[index]
-    w_subset <- w[index]
-    
-    #cholesky matrices for H1-H3 non-missing observations
-    sigma1_chol_subset <- chol(sigma1[index,index])
-    sigma2_chol_subset <- chol(sigma2[index,index])
-    
-    if (sigma3_equal_sigma2){
-      sigma3_chol_subset <- sigma2_chol_subset
-    } else {
-      sigma3_chol_subset <- chol(sigma3[index,index])
-    }
-    
-    if (sigma5_equal_sigma1){
-      sigma5_chol_subset <- sigma1_chol_subset
-    } else {
-      sigma5_chol_subset <- chol(sigma5[index,index])
-    }
-    
-    #compute H2 and H5 outside of the mediator loop (invariant)
-    lnp_data_H2 <- dmvt_chol(y_subset, sigma_chol=sigma2_chol_subset, df = kappa[2])
-    lnp_data_H5 <- dmvt_chol(y_subset, sigma_chol=sigma5_chol_subset, df = kappa[5])
-    
-    #iterate over mediators
-    for (i in missing_m[[b]]$cols){
-      counter <- counter + 1
-      if (counter%%1000==0 & verbose){print(paste(counter, "of", ncol(M)), quote=F)}
+    if (any(index)){
+      y_subset <- y[index]
+      w_subset <- w[index]
       
-      #set current mediator non-missing observations
-      m_subset <- M[index,i]
+      #cholesky matrices for H1-H3 non-missing observations
+      sigma1_chol_subset <- chol(sigma1[index,index])
+      sigma2_chol_subset <- chol(sigma2[index,index])
       
-      #design matrix for H4 and H6 non-missing observations
-      X4_subset <- cbind(X2[index,,drop=F], m_subset)
-      X6_subset <- cbind(X5[index,,drop=F], m_subset)
+      if (sigma3_equal_sigma2){
+        sigma3_chol_subset <- sigma2_chol_subset
+      } else {
+        sigma3_chol_subset <- chol(sigma3[index,index])
+      }
       
-      #scale and cholesky matrices for H4 and H6 non-missing observations
-      sigma4_subset <- crossprod(sqrt(lambda[4]*v4)*t(X4_subset))
-      sigma6_subset <- crossprod(sqrt(lambda[6]*v6)*t(X6_subset))
+      if (sigma5_equal_sigma1){
+        sigma5_chol_subset <- sigma1_chol_subset
+      } else {
+        sigma5_chol_subset <- chol(sigma5[index,index])
+      }
       
-      diag(sigma4_subset) <- lambda[4]/w_subset + diag(sigma4_subset)
-      diag(sigma6_subset) <- lambda[6]/w_subset + diag(sigma6_subset)
+      #compute H2 and H5 outside of the mediator loop (invariant)
+      lnp_data_H2 <- dmvt_chol(y_subset, sigma_chol=sigma2_chol_subset, df = kappa[2])
+      lnp_data_H5 <- dmvt_chol(y_subset, sigma_chol=sigma5_chol_subset, df = kappa[5])
       
-      sigma4_chol_subset <- chol(sigma4_subset)
-      sigma6_chol_subset <- chol(sigma6_subset)
-      
-      #compute likelihoods for H1-H6
-      lnp_data_H[i,2] <- lnp_data_H2
-      lnp_data_H[i,5] <- lnp_data_H5
-      lnp_data_H[i,1] <- dmvt_chol(m_subset, sigma_chol=sigma1_chol_subset, df = kappa[1])
-      lnp_data_H[i,3] <- dmvt_chol(m_subset, sigma_chol=sigma3_chol_subset, df = kappa[3])
-      lnp_data_H[i,4] <- dmvt_chol(y_subset, sigma_chol=sigma4_chol_subset, df = kappa[4])
-      lnp_data_H[i,6] <- dmvt_chol(y_subset, sigma_chol=sigma6_chol_subset, df = kappa[6])
+      #iterate over mediators
+      for (i in missing_m[[b]]$cols){
+        counter <- counter + 1
+        if (counter%%1000==0 & verbose){print(paste(counter, "of", ncol(M)), quote=F)}
+        
+        #set current mediator non-missing observations
+        m_subset <- M[index,i]
+        
+        #design matrix for H4 and H6 non-missing observations
+        X4_subset <- cbind(X2[index,,drop=F], m_subset)
+        X6_subset <- cbind(X5[index,,drop=F], m_subset)
+        
+        #scale and cholesky matrices for H4 and H6 non-missing observations
+        sigma4_subset <- crossprod(sqrt(lambda[4]*v4)*t(X4_subset))
+        sigma6_subset <- crossprod(sqrt(lambda[6]*v6)*t(X6_subset))
+        
+        diag(sigma4_subset) <- lambda[4]/w_subset + diag(sigma4_subset)
+        diag(sigma6_subset) <- lambda[6]/w_subset + diag(sigma6_subset)
+        
+        sigma4_chol_subset <- chol(sigma4_subset)
+        sigma6_chol_subset <- chol(sigma6_subset)
+        
+        #compute likelihoods for H1-H6
+        lnp_data_H[i,2] <- lnp_data_H2
+        lnp_data_H[i,5] <- lnp_data_H5
+        lnp_data_H[i,1] <- dmvt_chol(m_subset, sigma_chol=sigma1_chol_subset, df = kappa[1])
+        lnp_data_H[i,3] <- dmvt_chol(m_subset, sigma_chol=sigma3_chol_subset, df = kappa[3])
+        lnp_data_H[i,4] <- dmvt_chol(y_subset, sigma_chol=sigma4_chol_subset, df = kappa[4])
+        lnp_data_H[i,6] <- dmvt_chol(y_subset, sigma_chol=sigma6_chol_subset, df = kappa[6])
+      }
     }
   }
   
@@ -592,7 +593,7 @@ mediation_bf_v3 <- function(y, M, X, Z = NULL, w = NULL,
   lnBF_med_v2 <- lnBF_numerator_med_v2 - lnBF_denominator_med_v2
   
   #return results
-  if(verbose){print("Done", quote=F)}
+  if (verbose){print("Done", quote=F)}
   list(lnBF_med=lnBF_med, lnBF_coloc=lnBF_coloc, lnp_data_H=lnp_data_H, ln_post_c=ln_post_c, 
        lnBF_totmed=lnBF_totmed, lnBF_med_v2=lnBF_med_v2)
 }
