@@ -80,7 +80,7 @@ plot_bf <- function(med_bf_object,
   }
   med_map <- map_df_to_list(map = med_map_df, marker_column = "protein.id", pos_column = "middle")
   
-  gap <- sum(chr_lengths(map))/100
+  gap <- sum(qtl2::chr_lengths(map))/100
   
   lim_shift <- (max(bf[,1]) - min(bf[,1])) * expand_lim_factor
   qtl2:::plot.scan1(bf, map = med_map, ylab = "Log Bayes factor", type = "p", pch = 20, ylim = c(min(bf[,1]) - lim_shift, max(bf[,1]) + lim_shift),
