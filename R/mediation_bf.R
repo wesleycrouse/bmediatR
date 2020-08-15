@@ -244,6 +244,7 @@ mediation_bf <- function(y, M, X, Z = NULL, w = NULL,
 # Now requires a specifying prior over the 4 cases, not just the 3 cases in the denominator of each BF 
 # Posteriors over the 4 cases are reported in ln_post_c; co-local is column 3 and mediator is column 4
 # BFs for mediation and co-local are calculated by reweighing the prior
+
 #' Simplified Bayesian mediation function 
 #'
 #' This function takes an outcome, mediator(s), and a driver as a design matrix to perform a Bayesian mediation analysis.

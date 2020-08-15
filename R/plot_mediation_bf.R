@@ -36,9 +36,9 @@ map_df_to_list <- function (map, chr_column = "chr", pos_column = "cM", marker_c
   result
 }
 
-#' Bayes factor scan function
+#' Bayes factor genome scan function
 #'
-#' This function takes Bayes factor scan results from mediation_bf() and plots the genome-wide mediation scan.
+#' This function takes Bayes factor results from mediation_bf() and plots the genome-wide mediation scan.
 #'
 #' @param med_bf_object Output from mediation_bf(). 
 #' @param bf_type DEFAULT: "lnBF_med_v2". Bayes factor to be displayed. 

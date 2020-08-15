@@ -1,5 +1,11 @@
+#' Function that calculate approximate p-values for Bayes factors
+#'
+#' This function takes Bayes factor results from mediation_bf() and calculates approximate p-values based
+#' on comparisons to genome results, using the assumption that the vast majority of candidates are not
+#' mediators and can thus be used to characterize a null distribution of Bayes factors.
+#'
 #' @export
-#' @examples plot_bf()
+#' @examples get_approx_pval()
 get_approx_pval <- function(med_bf_object,
                             annot) {
   
@@ -16,8 +22,13 @@ get_approx_pval <- function(med_bf_object,
   bf_dat
 }
 
+#' Function that calculate permutation-based p-values for Bayes factors
+#'
+#' This function takes Bayes factor results from mediation_bf() and calculates permutation p-values based
+#' on permuting the mediator.
+#'
 #' @export
-#' @examples plot_bf()
+#' @examples get_perm_pval()
 get_perm_pval <- function(y, 
                           M, 
                           X, 
