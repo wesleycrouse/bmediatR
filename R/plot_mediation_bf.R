@@ -41,7 +41,7 @@ map_df_to_list <- function (map, chr_column = "chr", pos_column = "cM", marker_c
 #' This function takes Bayes factor results from mediation_bf() and plots the genome-wide mediation scan.
 #'
 #' @param med_bf_object Output from mediation_bf(). 
-#' @param bf_type DEFAULT: "lnBF_med_v2". Bayes factor to be displayed. 
+#' @param bf_type DEFAULT: "lnBF_med". Bayes factor to be displayed. 
 #' @param med_annot Annotation data for -omic mediators.
 #' @param include_chr DEFAULT: c(1:19, "X"). Chromosomes to include in plot.
 #' @param expland_lim_factor DEFAULT: 0.025. Scale to increase plot limits by.
@@ -50,7 +50,7 @@ map_df_to_list <- function (map, chr_column = "chr", pos_column = "cM", marker_c
 #' @export
 #' @examples plot_bf()
 plot_bf <- function(med_bf_object, 
-                    bf_type = "lnBF_med_v2",
+                    bf_type = "lnBF_med",
                     med_annot, 
                     include_chr = c(1:19, "X"), 
                     expand_lim_factor = 0.025, 
