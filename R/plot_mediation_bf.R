@@ -1,8 +1,56 @@
-library(tidyverse)
+#' @importFrom magrittr %>%
+#' @export
+magrittr::`%>%`
 
-## Plot function
+# Conversion function taken from qtl2convert
+map_df_to_list <- function (map, chr_column = "chr", pos_column = "cM", marker_column = "marker", 
+          Xchr = c("x", "X")) {
+  
+  if (is.null(marker_column)) {
+    marker_column <- "qtl2tmp_marker"
+    map[, marker_column] <- rownames(map)
+  }
+  if (!(marker_column %in% colnames(map))) 
+    stop("Column \"", marker_column, "\" not found.")
+  if (!(chr_column %in% colnames(map))) 
+    stop("Column \"", chr_column, "\" not found.")
+  if (!(pos_column %in% colnames(map))) 
+    stop("Column \"", pos_column, "\" not found.")
+  marker <- map[, marker_column]
+  chr <- map[, chr_column]
+  uchr <- unique(chr)
+  pos <- map[, pos_column]
+  result <- split(as.numeric(pos), factor(chr, levels = uchr))
+  marker <- split(marker, factor(chr, levels = uchr))
+  for (i in seq(along = result)) names(result[[i]]) <- marker[[i]]
+  is_x_chr <- rep(FALSE, length(result))
+  names(is_x_chr) <- names(result)
+  if (!is.null(Xchr)) {
+    Xchr_used <- Xchr %in% names(is_x_chr)
+    if (any(Xchr_used)) {
+      Xchr <- Xchr[Xchr_used]
+      is_x_chr[Xchr] <- TRUE
+    }
+  }
+  attr(result, "is_x_chr") <- is_x_chr
+  result
+}
+
+#' Bayes factor scan function
+#'
+#' This function takes Bayes factor scan results from mediation_bf() and plots the genome-wide mediation scan.
+#'
+#' @param med_bf_object Output from mediation_bf(). 
+#' @param bf_type DEFAULT: "lnBF_med_v2". Bayes factor to be displayed. 
+#' @param med_annot Annotation data for -omic mediators.
+#' @param include_chr DEFAULT: c(1:19, "X"). Chromosomes to include in plot.
+#' @param expland_lim_factor DEFAULT: 0.025. Scale to increase plot limits by.
+#' @param label_thresh DEFAULT: NULL. Label mediators that surpass label_thresh. Default does not add labels.
+#' @param qtl_dat DEFAULT: NULL. QTL data that includes position of QTL and outcome. Adds ticks to the figure.
+#' @export
+#' @examples plot_bf()
 plot_bf <- function(med_bf_object, 
-                    bf_type = c("lnBF_med", "lnBF_coloc"),
+                    bf_type = "lnBF_med_v2",
                     med_annot, 
                     include_chr = c(1:19, "X"), 
                     expand_lim_factor = 0.025, 
@@ -20,17 +68,17 @@ plot_bf <- function(med_bf_object,
   
   med_map_df <- med_annot %>%
     dplyr::select(protein.id, symbol, chr, middle) %>%
-    filter(chr %in% include_chr) %>%
-    mutate(chr = factor(chr, levels = c(1:19, "X"))) %>%
+    dplyr::filter(chr %in% include_chr) %>%
+    dplyr::mutate(chr = factor(chr, levels = c(1:19, "X"))) %>%
     as.data.frame %>% 
-    arrange(chr)
+    dplyr::arrange(chr)
   if (!is.null(qtl_dat)) {
     ## Add QTL to map for plotting
-    med_map_df <- bind_rows(med_map_df,
-                            data.frame(protein.id = "QTL", symbol = "QTL", chr = qtl_dat$chr, middle = qtl_dat$pos))
+    med_map_df <- dplyr::bind_rows(med_map_df,
+                                   data.frame(protein.id = "QTL", symbol = "QTL", chr = qtl_dat$chr, middle = qtl_dat$pos))
     
   }
-  med_map <- qtl2convert::map_df_to_list(map = med_map_df, marker_column = "protein.id", pos_column = "middle")
+  med_map <- map_df_to_list(map = med_map_df, marker_column = "protein.id", pos_column = "middle")
   
   gap <- sum(chr_lengths(map))/100
   
@@ -55,7 +103,8 @@ plot_bf <- function(med_bf_object,
     }
   }
   if (!is.null(outcome_symbol)) {
-    rug(x = xpos[med_annot %>% filter(symbol == outcome_symbol) %>% pull(protein.id)],
+    rug(x = xpos[med_annot %>% 
+                   dplyr::filter(symbol == outcome_symbol) %>% pull(protein.id)],
         lwd = 3,
         col = "black")
   }

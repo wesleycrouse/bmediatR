@@ -1,17 +1,23 @@
+#' @export
+#' @examples plot_bf()
 get_approx_pval <- function(med_bf_object,
                             annot) {
   
   bf_dat <- data.frame(protein.id = names(med_bf_object$lnBF_med), lnBF = med_bf_object$lnBF_med) %>%
-    left_join(annot)
+    dplyr::left_join(annot)
   
   approx_pval <- nrow(bf_dat)
   for (i in 1:nrow(bf_dat)) {
-    approx_pval[i] <- mean(c(bf_dat$lnBF_med[i] < (bf_dat %>% filter(chr != bf_dat$chr[i]) %>% pull(lnBF_med)), TRUE))
+    approx_pval[i] <- mean(c(bf_dat$lnBF_med[i] < (bf_dat %>% 
+                                                     dplyr::filter(chr != bf_dat$chr[i]) %>% 
+                                                     dplyr::pull(lnBF_med)), TRUE))
   }
   bf_dat$approx_pval <- approx_pval
   bf_dat
 }
 
+#' @export
+#' @examples plot_bf()
 get_perm_pval <- function(y, 
                           M, 
                           X, 
@@ -21,12 +27,12 @@ get_perm_pval <- function(y,
                           bf_type = "lnBF_totmed",
                           ...) {
   
-  actual_bf <- mediation_bf_v3(y = y, 
-                               M = M, 
-                               X = X,
-                               Z = Z,
-                               verbose = verbose,
-                               ...)
+  actual_bf <- mediation_bf(y = y, 
+                            M = M, 
+                            X = X,
+                            Z = Z,
+                            verbose = verbose,
+                            ...)
   
   if (is.null(Z)) { Z <- matrix(1, nrow = nrow(M)); rownames(Z) <- rownames(M) }
   
@@ -55,12 +61,12 @@ get_perm_pval <- function(y,
     perm_M <- M
     rownames(perm_M) <- as.character(perm_mat[,i])
     for (j in 1:ncol(M)) {
-      perm_med <- mediation_bf_v3(y = y, 
-                                  M = perm_M[,j,drop = FALSE][rownames(M),], 
-                                  X = X,
-                                  Z = Z, 
-                                  verbose = verbose,
-                                  ...)
+      perm_med <- mediation_bf(y = y, 
+                               M = perm_M[,j,drop = FALSE][rownames(M),], 
+                               X = X,
+                               Z = Z, 
+                               verbose = verbose,
+                               ...)
       perm_bf_mat[i, j] <- perm_med[[bf_type]]
     } 
     print(paste("Perm", i, "done out of", num_perm))

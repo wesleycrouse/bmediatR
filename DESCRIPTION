@@ -9,5 +9,5 @@ License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
-Imports: Matrix, mnormt, lme4, gdata, evir, data.table
-Suggests: plotrix, scales, DOQTL, EnvStats
+Imports: matrixStats, VGAM, dplyr, magrittr, qtl2
+Suggests:
