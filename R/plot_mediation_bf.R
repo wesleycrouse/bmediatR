@@ -36,7 +36,7 @@ map_df_to_list <- function (map, chr_column = "chr", pos_column = "cM", marker_c
   result
 }
 
-#' Bayes factor genome scan function
+#' Bayes factor genome plot function
 #'
 #' This function takes Bayes factor results from mediation_bf() and plots the genome-wide mediation scan.
 #'
@@ -115,6 +115,10 @@ plot_bf <- function(med_bf_object,
   }
 }
 
+#' Posterior probability genome plot function
+#'
+#' This function takes posterior probability results from mediation_bf() and plots the genome-wide mediation scan.
+#'
 #' @export
 #' @examples plot_posterior()
 plot_posterior <- function(med_bf_object, 
