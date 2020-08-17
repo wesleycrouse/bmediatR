@@ -10,15 +10,13 @@ mediation_bf(
   X,
   Z = NULL,
   w = NULL,
-  kappa = rep(0.001, 4),
-  lambda = rep(0.001, 4),
-  tau_sq_mu = rep(1000, 4),
-  tau_sq_Z = rep(1000, 4),
-  phi_sq_X = c(NA, 1, 1, 0.5),
-  phi_sq_m = 0.5,
-  p_cm = c(1/3, 1/3, 1/3),
-  p_cc = c(1/3, 1/3, 1/3),
-  p_med = 0.5,
+  kappa = rep(0.001, 6),
+  lambda = rep(0.001, 6),
+  tau_sq_mu = rep(1000, 6),
+  tau_sq_Z = rep(1000, 6),
+  phi_sq_X = c(NA, 1, 1, 0.5, NA, NA),
+  phi_sq_m = c(NA, NA, NA, 0.5, NA, 1),
+  ln_prior_c = rep(log(1/8), 8),
   verbose = T
 )
 }

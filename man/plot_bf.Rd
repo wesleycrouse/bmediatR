@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_mediation_bf.R
 \name{plot_bf}
 \alias{plot_bf}
-\title{Bayes factor genome scan function}
+\title{Bayes factor genome plot function}
 \usage{
 plot_bf(
   med_bf_object,
