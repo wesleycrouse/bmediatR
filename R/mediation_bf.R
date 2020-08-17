@@ -149,7 +149,7 @@ mediation_bf <- function(y, M, X, Z = NULL, w = NULL,
   v4 <- c(tau_sq_mu[4], rep(phi_sq_X[4], d), rep(tau_sq_Z[4], p), phi_sq_m[4])
   v6 <- c(tau_sq_mu[6], rep(tau_sq_Z[6], p), phi_sq_m[6])
   
-  If (!sigma3_equal_sigma2) {
+  if (!sigma3_equal_sigma2) {
     v3 <- c(tau_sq_mu[3], rep(phi_sq_X[3], d), rep(tau_sq_Z[3], p))
   }
   
