@@ -185,3 +185,53 @@ plot_posterior <- function(med_bf_object,
   }
 }
 
+#' Stacked barplot of posterior model probabilities function
+#'
+#' This function takes posterior probability results from mediation_bf() and plots the stacked barplot of posterior model probabilities.
+#'
+#' @export
+#' @examples plot_posterior_stack()
+plot_posterior_stack <- function(med_bf_object,
+                                 med_annot,
+                                 protein.id) {
+  
+  this.protein <- protein.id
+  posterior_dat <- med_bf_object$ln_post_c %>%
+    as.data.frame %>%
+    rownames_to_column("protein.id") %>% 
+    mutate("partial mediator" = exp(V4),
+           "full mediator" = exp(V8),
+           "co-local" = exp(V3)) %>%
+    left_join(med_annot %>%
+                dplyr::select(protein.id, symbol))
+  posterior_dat <- posterior_dat %>%
+    left_join(posterior_dat %>%
+                group_by(protein.id) %>%
+                summarize("other non-mediator" = sum(exp(V1), exp(V2), exp(V5), exp(V6), exp(V7)))) %>%
+    dplyr::select(-contains("V")) %>%
+    gather(key = model, value = post_p, -c(protein.id, symbol)) %>%
+    mutate(model = factor(model, levels = c("full mediator", "partial mediator", "co-local", "other non-mediator")))
+  
+  bar_theme <- theme(panel.grid.major = element_blank(), 
+                     panel.grid.minor = element_blank(),
+                     panel.background = element_blank(), 
+                     axis.line = element_line(colour = "black"),
+                     plot.title = element_text(hjust = 0.5, size = 16, face = "plain"), 
+                     axis.title.x = element_text(size = 14, face = "plain"),
+                     axis.text.x = element_text(hjust = 0.5, size = 14, face = "plain"),
+                     axis.title.y = element_text(size = 14, face = "plain"),
+                     axis.text.y = element_text(size = 14, face = "plain"),
+                     axis.ticks.y = element_blank(),
+                     legend.title = element_text(size = 14),
+                     legend.text = element_text(size = 14))
+  
+  p <- ggplot(data = posterior_dat %>% 
+                filter(protein.id == this.protein), 
+              aes(x = symbol, y = post_p)) +
+    geom_col(aes(fill = model), width = 0.7) +
+    scale_fill_manual(values = c("seagreen4", "seagreen1", "skyblue", "gray")) +
+    ylab("Posterior model probability") + bar_theme
+  
+  p
+}
+
