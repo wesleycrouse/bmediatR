@@ -231,10 +231,10 @@ plot_posterior_bar <- function(med_bf_object,
     scale_fill_manual(values = c("seagreen4", "seagreen1", "skyblue", "gray")) +
     ylab("Posterior model probability") + bar_theme
   if (stack) {
-    p <- p + geom_col(aes(x = symbol, y = post_p, fill = model), width = 0.5) + 
-      geom_hline(yintercept = c(0, 1), col = "gray", linetype = "dashed")
+    p <- p + geom_col(aes(x = symbol, y = post_p, fill = model), width = 0.5) 
   } else {
-    p <- p + geom_bar(aes(x = symbol, y = post_p, fill = model), position = "dodge", stat = "summary", fun = "mean")
+    p <- p + geom_bar(aes(x = symbol, y = post_p, fill = model), position = "dodge", stat = "summary", fun = "mean") +
+      geom_hline(yintercept = c(0, 1), col = "gray", linetype = "dashed")
   }
 
   p
