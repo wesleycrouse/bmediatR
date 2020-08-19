@@ -9,7 +9,6 @@ sumtozero_contrast <- function(k) {
 
 # Adapted from mvtnorm::dmvt
 dmvt_chol <- function(x, sigma_chol, df) {
-  
   if (is.vector(x)) { x <- matrix(x, nrow=length(x)) }
   n <- nrow(x)
   dec <- sigma_chol
@@ -20,7 +19,6 @@ dmvt_chol <- function(x, sigma_chol, df) {
 
 # Adapted from qtl2::batch_cols
 batch_cols <- function(mat) {
-  
   mat <- !is.finite(mat)
   n <- nrow(mat)
   all_true <- rep(TRUE, n)
@@ -82,7 +80,6 @@ mediation_bf <- function(y, M, X, Z = NULL, w = NULL,
                          phi_sq_m = c(NA, NA, NA, 0.5, NA, 1),
                          ln_prior_c = rep(log(1/8), 8),
                          verbose = T) {
-  
   if (verbose) { print("Initializing", quote=F) }
   
   # Dimensions
@@ -259,31 +256,31 @@ mediation_bf <- function(y, M, X, Z = NULL, w = NULL,
                      lnp_data_H[,3] + lnp_data_H[,6] + ln_prior_c[8])
   ln_post_c <- ln_post_c - apply(ln_post_c, 1, matrixStats::logSumExp)
   
-  # Compute mediation Bayes factors
-  lnBF_numerator_med <- ln_post_c[,4] - ln_prior_c[4]
-  lnBF_denominator_med <- apply(ln_post_c[,-4,drop=F] - VGAM::log1mexp(-ln_prior_c[4]), 1, matrixStats::logSumExp)
-  lnBF_med <- lnBF_numerator_med - lnBF_denominator_med
+  # Compute partial mediation Bayes factor
+  lnBF_numerator_partmed <- ln_post_c[,4] - ln_prior_c[4]
+  lnBF_denominator_partmed <- apply(ln_post_c[,-4,drop=F] - VGAM::log1mexp(-ln_prior_c[4]), 1, matrixStats::logSumExp)
+  lnBF_partmed <- lnBF_numerator_partmed - lnBF_denominator_partmed
   
-  # Compute co-local Bayes factors
+  # Compute co-local Bayes factor
   lnBF_numerator_coloc <- ln_post_c[,3] - ln_prior_c[3]
   lnBF_denominator_coloc <- apply(ln_post_c[,-3,drop=F] - VGAM::log1mexp(-ln_prior_c[3]), 1, matrixStats::logSumExp)
   lnBF_coloc <- lnBF_numerator_coloc - lnBF_denominator_coloc
   
-  # Compute total mediation Bayes factors
+  # Compute total mediation Bayes factor
   lnBF_numerator_totmed <- ln_post_c[,8] - ln_prior_c[8]
   lnBF_denominator_totmed <- apply(ln_post_c[,-8,drop=F] - VGAM::log1mexp(-ln_prior_c[8]), 1, matrixStats::logSumExp)
   lnBF_totmed <- lnBF_numerator_totmed - lnBF_denominator_totmed
   
-  # Compute mediation Bayes factors (incomplete or total)
+  # Compute mediation Bayes factor (partial or total)
   ln_prior_med <- matrixStats::logSumExp(ln_prior_c[c(4,8)])
-  lnBF_numerator_med_v2 <- apply(ln_post_c[,c(4,8),drop=F] - ln_prior_med, 1, matrixStats::logSumExp)
-  lnBF_denominator_med_v2 <- apply(ln_post_c[,-c(4,8),drop=F] - VGAM::log1mexp(-ln_prior_med), 1, matrixStats::logSumExp)
-  lnBF_med_v2 <- lnBF_numerator_med_v2 - lnBF_denominator_med_v2
+  lnBF_numerator_med <- apply(ln_post_c[,c(4,8),drop=F] - ln_prior_med, 1, matrixStats::logSumExp)
+  lnBF_denominator_med <- apply(ln_post_c[,-c(4,8),drop=F] - VGAM::log1mexp(-ln_prior_med), 1, matrixStats::logSumExp)
+  lnBF_med <- lnBF_numerator_med - lnBF_denominator_med
   
   # Return results
   if (verbose) { print("Done", quote=F) }
-  list(lnBF_med=lnBF_med, lnBF_coloc=lnBF_coloc, lnp_data_H=lnp_data_H, ln_post_c=ln_post_c, 
-       lnBF_totmed=lnBF_totmed, lnBF_med_v2=lnBF_med_v2)
+  list(lnp_data_H=lnp_data_H, ln_post_c=ln_post_c, lnBF_med=lnBF_med, lnBF_partmed=lnBF_partmed, 
+       lnBF_totmed=lnBF_totmed, lnBF_coloc=lnBF_coloc)
 }
 # Now requires a specifying prior over the 4 cases, not just the 3 cases in the denominator of each BF 
 # Posteriors over the 4 cases are reported in ln_post_c; co-local is column 3 and mediator is column 4
@@ -317,7 +314,6 @@ mediation_bf_simple <- function(y, M, X, Z = NULL, w = NULL,
                                 phi_sq_m = 0.5,
                                 ln_prior_c = rep(log(0.25), 4),
                                 verbose = T){
-  
   if (verbose) { print("Initializing", quote=F) }
   
   # Dimensions
