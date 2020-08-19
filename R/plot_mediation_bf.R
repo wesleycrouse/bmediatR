@@ -185,31 +185,32 @@ plot_posterior <- function(med_bf_object,
   }
 }
 
-#' Stacked barplot of posterior model probabilities function
+#' Barplot of posterior model probabilities function
 #'
-#' This function takes posterior probability results from mediation_bf() and plots the stacked barplot of posterior model probabilities.
+#' This function takes posterior probability results from mediation_bf() and plots barplots of posterior model probabilities.
 #'
 #' @export
-#' @examples plot_posterior_stack()
-plot_posterior_stack <- function(med_bf_object,
-                                 med_annot,
-                                 protein.id) {
-  
-  this.protein <- protein.id
+#' @examples plot_posterior_bar()
+plot_posterior_bar <- function(med_bf_object,
+                               med_annot,
+                               mediator_id,
+                               med_var = "protein.id",
+                               stack = FALSE) {
+
   posterior_dat <- med_bf_object$ln_post_c %>%
     as.data.frame %>%
-    rownames_to_column("protein.id") %>% 
+    rownames_to_column(med_var) %>% 
     mutate("partial mediator" = exp(V4),
            "full mediator" = exp(V8),
            "co-local" = exp(V3)) %>%
     left_join(med_annot %>%
-                dplyr::select(protein.id, symbol))
+                dplyr::select(all_of(med_var), symbol))
   posterior_dat <- posterior_dat %>%
     left_join(posterior_dat %>%
-                group_by(protein.id) %>%
+                group_by_at(vars(tidyselect::all_of(med_var))) %>%
                 summarize("other non-mediator" = sum(exp(V1), exp(V2), exp(V5), exp(V6), exp(V7)))) %>%
     dplyr::select(-contains("V")) %>%
-    gather(key = model, value = post_p, -c(protein.id, symbol)) %>%
+    gather(key = model, value = post_p, -c(tidyselect::all_of(med_var), symbol)) %>%
     mutate(model = factor(model, levels = c("full mediator", "partial mediator", "co-local", "other non-mediator")))
   
   bar_theme <- theme(panel.grid.major = element_blank(), 
@@ -226,12 +227,16 @@ plot_posterior_stack <- function(med_bf_object,
                      legend.text = element_text(size = 14))
   
   p <- ggplot(data = posterior_dat %>% 
-                filter(protein.id == this.protein), 
-              aes(x = symbol, y = post_p)) +
-    geom_col(aes(fill = model), width = 0.7) +
+                filter((!!as.symbol(med_var)) == mediator_id)) +
     scale_fill_manual(values = c("seagreen4", "seagreen1", "skyblue", "gray")) +
     ylab("Posterior model probability") + bar_theme
-  
+  if (stack) {
+    p <- p + geom_col(aes(x = symbol, y = post_p, fill = model), width = 0.5) + 
+      geom_hline(yintercept = c(0, 1), col = "gray", linetype = "dashed")
+  } else {
+    p <- p + geom_bar(aes(x = symbol, y = post_p, fill = model), position = "dodge", stat = "summary", fun = "mean")
+  }
+
   p
 }
 
