@@ -204,10 +204,10 @@ plot_posterior_bar <- function(med_bf_object,
            "full mediator" = exp(V8),
            "co-local" = exp(V3)) %>%
     left_join(med_annot %>%
-                dplyr::select(all_of(med_var), symbol))
+                dplyr::select(tidyselect::all_of(med_var), symbol))
   posterior_dat <- posterior_dat %>%
     left_join(posterior_dat %>%
-                group_by_at(vars(tidyselect::all_of(med_var))) %>%
+                group_by_at(dplyr::vars(tidyselect::all_of(med_var))) %>%
                 summarize("other non-mediator" = sum(exp(V1), exp(V2), exp(V5), exp(V6), exp(V7)))) %>%
     dplyr::select(-contains("V")) %>%
     gather(key = model, value = post_p, -c(tidyselect::all_of(med_var), symbol)) %>%
