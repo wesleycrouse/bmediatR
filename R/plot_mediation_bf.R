@@ -52,6 +52,7 @@ map_df_to_list <- function (map, chr_column = "chr", pos_column = "cM", marker_c
 plot_bf <- function(med_bf_object, 
                     bf_type = "lnBF_med",
                     med_annot, 
+                    med_var = "protein.id",
                     include_chr = c(1:19, "X"), 
                     expand_lim_factor = 0.025, 
                     label_thresh = NULL, 
@@ -67,7 +68,7 @@ plot_bf <- function(med_bf_object,
   class(bf) <- "scan1"
   
   med_map_df <- med_annot %>%
-    dplyr::select(protein.id, symbol, chr, middle) %>%
+    dplyr::select(tidyselect::all_of(med_var), symbol, chr, middle) %>%
     dplyr::filter(chr %in% include_chr) %>%
     dplyr::mutate(chr = factor(chr, levels = c(1:19, "X"))) %>%
     as.data.frame %>% 
@@ -75,10 +76,13 @@ plot_bf <- function(med_bf_object,
   if (!is.null(qtl_dat)) {
     ## Add QTL to map for plotting
     med_map_df <- dplyr::bind_rows(med_map_df,
-                                   data.frame(protein.id = "QTL", symbol = "QTL", chr = qtl_dat$chr, middle = qtl_dat$pos))
-    
+                                   qtl_dat %>%
+                                     dplyr::mutate((!!as.symbol(med_var)) := "QTL",
+                                                   symbol = "QTL") %>%
+                                     dplyr::rename(middle = pos) %>%
+                                     dplyr::select(tidyselect::all_of(med_var), symbol, chr, middle))
   }
-  med_map <- map_df_to_list(map = med_map_df, marker_column = "protein.id", pos_column = "middle")
+  med_map <- map_df_to_list(map = med_map_df, marker_column = med_var, pos_column = "middle")
   
   gap <- sum(qtl2::chr_lengths(map))/100
   
@@ -93,18 +97,19 @@ plot_bf <- function(med_bf_object,
     labels <- rownames(bf)[bf > label_thresh]
     
     label_map_df <- med_map_df %>%
-      filter(protein.id %in% labels) 
+      filter((!!as.symbol(med_var)) %in% labels) 
     
     for (i in 1:nrow(label_map_df)) {
-      lab_pos <- xpos[label_map_df$protein.id[i]]
-      lab_bf <- bf[label_map_df$protein.id[i],]
+      lab_pos <- xpos[label_map_df[i, med_var]]
+      lab_bf <- bf[label_map_df[i, med_var],]
       
       text(x = lab_pos, y = lab_bf, label_map_df$symbol[i], font = 3)
     }
   }
   if (!is.null(outcome_symbol)) {
     rug(x = xpos[med_annot %>% 
-                   dplyr::filter(symbol == outcome_symbol) %>% pull(protein.id)],
+                   dplyr::filter(symbol == outcome_symbol) %>% 
+                   pull(tidyselect::all_of(med_var))],
         lwd = 3,
         col = "black")
   }
@@ -124,6 +129,7 @@ plot_bf <- function(med_bf_object,
 plot_posterior <- function(med_bf_object, 
                            post_col = c(4, 8),
                            med_annot, 
+                           med_var = "protein.id",
                            include_chr = c(1:19, "X"), 
                            expand_lim_factor = 0.025, 
                            label_thresh = NULL, 
@@ -137,7 +143,7 @@ plot_posterior <- function(med_bf_object,
   class(post_p) <- "scan1"
   
   med_map_df <- med_annot %>%
-    dplyr::select(protein.id, symbol, chr, middle) %>%
+    dplyr::select(tidyselect::all_of(med_var), symbol, chr, middle) %>%
     dplyr::filter(chr %in% include_chr) %>%
     dplyr::mutate(chr = factor(chr, levels = c(1:19, "X"))) %>%
     as.data.frame %>% 
@@ -145,10 +151,13 @@ plot_posterior <- function(med_bf_object,
   if (!is.null(qtl_dat)) {
     ## Add QTL to map for plotting
     med_map_df <- dplyr::bind_rows(med_map_df,
-                                   data.frame(protein.id = "QTL", symbol = "QTL", chr = qtl_dat$chr, middle = qtl_dat$pos))
-    
+                                   qtl_dat %>%
+                                     dplyr::mutate((!!as.symbol(med_var)) := "QTL",
+                                                   symbol = "QTL") %>%
+                                     dplyr::rename(middle = pos) %>%
+                                     dplyr::select(tidyselect::all_of(med_var), symbol, chr, middle)) 
   }
-  med_map <- map_df_to_list(map = med_map_df, marker_column = "protein.id", pos_column = "middle")
+  med_map <- map_df_to_list(map = med_map_df, marker_column = med_var, pos_column = "middle")
   
   gap <- sum(qtl2::chr_lengths(map))/100
   
@@ -163,18 +172,19 @@ plot_posterior <- function(med_bf_object,
     labels <- rownames(post_p)[post_p > label_thresh]
     
     label_map_df <- med_map_df %>%
-      filter(protein.id %in% labels) 
+      filter((!!as.symbol(med_var)) %in% labels) 
     
     for (i in 1:nrow(label_map_df)) {
-      lab_pos <- xpos[label_map_df$protein.id[i]]
-      lab_post_p <- post_p[label_map_df$protein.id[i],]
+      lab_pos <- xpos[label_map_df[i, med_var]]
+      lab_post_p <- post_p[label_map_df[i, med_var],]
       
       text(x = lab_pos, y = lab_post_p, label_map_df$symbol[i], font = 3)
     }
   }
   if (!is.null(outcome_symbol)) {
     rug(x = xpos[med_annot %>% 
-                   dplyr::filter(symbol == outcome_symbol) %>% pull(protein.id)],
+                   dplyr::filter(symbol == outcome_symbol) %>% 
+                   pull(tidyselect::all_of(med_var))],
         lwd = 3,
         col = "black")
   }
