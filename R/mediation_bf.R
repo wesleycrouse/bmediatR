@@ -577,8 +577,8 @@ mediation_bf_new <- function(y, M, X, Z = NULL, w = NULL,
   #likelihood models for all hypothesis
   #hypotheses encoded by presence or absence of 'X->y, X->m, m->y' edges on the DAG
   #H1: '0,-,0' / y does not depend on X or m
-  #H2: '0,-,1' / y depends on m but not on X
-  #H3: '1,-,0' / y depends on X but not on m
+  #H2: '0,-,1' / y depends on m but not X
+  #H3: '1,-,0' / y depends on X but not m
   #H4: '1,-,1' / y depends on X and m
   #H5: '-,0,-' / m does not depend on X
   #H6: '-,1,-' / m depends on X
@@ -742,8 +742,8 @@ model_info <- function(){
   writeLines(c("likelihood models for all hypotheses",
                "hypotheses encoded by presence or absence of 'X->y, X->m, m->y' edges on the DAG",
                "H1: '0,-,0' / y does not depend on X or m",
-               "H2: '0,-,1' / y depends on m but not on X",
-               "H3: '1,-,0' / y depends on X but not on m",
+               "H2: '0,-,1' / y depends on m but not X",
+               "H3: '1,-,0' / y depends on X but not m",
                "H4: '1,-,1' / y depends on X and m",
                "H5: '-,0,-' / m does not depend on X",
                "H6: '-,1,-' / m depends on X",
