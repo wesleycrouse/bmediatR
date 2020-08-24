@@ -490,7 +490,7 @@ posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator, c_denominat
   }
   
   #compute posterior probabilities for all cases
-  #cases encoded by presence or absence of "XY,XM,MY" edges on the DAG
+  #cases encoded by presence or absence of "X->Y, X->M, M->Y" edges on the DAG
   #c1: "0,0,0" H1 and H5
   #c2: "0,0,1" H2 and H5
   #c3: "0,1,0" H1 and H6
@@ -575,7 +575,7 @@ mediation_bf_new <- function(y, M, X, Z = NULL, w = NULL,
   ones <- matrix(1, nrow(XC))
   
   #likelihood models for all hypothesis
-  #hypotheses encoded by presence or absence of 'X->Y, X->M, M->Y' edges on the DA
+  #hypotheses encoded by presence or absence of 'X->Y, X->M, M->Y' edges on the DAG
   #H1: '0,-,0' y does not depend on X or m
   #H2: '0,-,1' y depends on m but not on X
   #H3: '1,-,0' y depends on X but not on m
@@ -716,7 +716,7 @@ mediation_bf_new <- function(y, M, X, Z = NULL, w = NULL,
   
   #compute posterior for all cases
   #compute posterior odds for specified combinations of cases
-  #cases encoded by presence or absence of "XY,XM,MY" edges on the DAG
+  #cases encoded by presence or absence of "X->Y, X->M, M->Y" edges on the DAG
   #c1: "0,0,0" H1 and H5
   #c2: "0,0,1" H2 and H5
   #c3: "0,1,0" H1 and H6
