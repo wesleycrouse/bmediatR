@@ -287,6 +287,7 @@ mediation_bf <- function(y, M, X, Z = NULL, w = NULL,
   list(lnp_data_H=lnp_data_H, ln_post_c=ln_post_c, lnBF_med=lnBF_med, lnBF_partmed=lnBF_partmed, 
        lnBF_totmed=lnBF_totmed, lnBF_coloc=lnBF_coloc)
 }
+
 # Now requires a specifying prior over the 4 cases, not just the 3 cases in the denominator of each BF 
 # Posteriors over the 4 cases are reported in ln_post_c; co-local is column 3 and mediator is column 4
 # BFs for mediation and co-local are calculated by reweighing the prior
@@ -468,4 +469,276 @@ mediation_bf_simple <- function(y, M, X, Z = NULL, w = NULL,
   # Return results
   if (verbose){ print("Done", quote=F) }
   list(lnp_data_H=lnp_data_H, ln_post_c=ln_post_c, lnBF_partmed=lnBF_partmed, lnBF_coloc=lnBF_coloc)
+}
+
+
+
+
+
+
+posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator, c_denominator=NULL){
+  #function to compute log odds from log probabilities
+  ln_odds <- function(ln_p, numerator){
+    ln_odds_numerator <- apply(ln_p[,numerator,drop=F], 1, matrixStats::logSumExp)
+    ln_odds_denominator <- apply(ln_p[,-numerator,drop=F], 1, matrixStats::logSumExp)
+    ln_odds <- ln_odds_numerator -ln_odds_denominator
+  }
+  
+  #ensure c_numerator is a list
+  if (!is.list(c_numerator)){
+    c_numerator <- list(c_numerator)
+  }
+  
+  #ensure ln_prior_c is a matrix
+  if (!is.matrix(ln_prior_c)){
+    ln_prior_c <- matrix(ln_prior_c, ncol(M), length(ln_prior_c))
+  }
+  
+  #compute posterior probabilities for all cases
+  #cases encoded by presence of absence of "XY,XM,MY" edges on the DAG
+  #c1: "0,0,0" H1 and H5
+  #c2: "0,0,1" H2 and H5
+  #c3: "0,1,0" H1 and H6
+  #c4: "0,1,1" H2 and H6
+  #c5: "1,0,0" H3 and H5 
+  #c6: "1,0,1" H4 and H5
+  #c7: "1,1,0" H3 and H6
+  #c8: "1,1,1" H4 and H6
+  ln_post_c <- cbind(ln_prob_data[,1] + ln_prob_data[,5] + ln_prior_c[,1],
+                     ln_prob_data[,2] + ln_prob_data[,5] + ln_prior_c[,2],
+                     ln_prob_data[,1] + ln_prob_data[,6] + ln_prior_c[,3],
+                     ln_prob_data[,2] + ln_prob_data[,6] + ln_prior_c[,4],
+                     ln_prob_data[,3] + ln_prob_data[,5] + ln_prior_c[,5],
+                     ln_prob_data[,4] + ln_prob_data[,5] + ln_prior_c[,6],
+                     ln_prob_data[,3] + ln_prob_data[,6] + ln_prior_c[,7],
+                     ln_prob_data[,4] + ln_prob_data[,6] + ln_prior_c[,8])
+  ln_post_c <- ln_post_c - apply(ln_post_c, 1, matrixStats::logSumExp)
+  colnames(ln_post_c) <- c("0,0,0",
+                           "0,0,1",
+                           "0,1,0",
+                           "0,1,1",
+                           "1,0,0",
+                           "1,0,1",
+                           "1,1,0",
+                           "1,1,1")
+  
+  #compute prior odds for each combination of cases
+  ln_prior_odds <- sapply(c_numerator, ln_odds, ln_p=ln_prior_c)
+  rownames(ln_prior_odds) <- rownames(ln_post_c)
+  colnames(ln_prior_odds) <- c_numerator
+  
+  #compute posterior odds for each combination of cases
+  ln_post_odds <- sapply(c_numerator, ln_odds, ln_p=ln_post_c)
+  rownames(ln_post_odds) <- rownames(ln_post_c)
+  colnames(ln_post_odds) <- c_numerator
+  
+  #return results
+  list(ln_post_c=ln_post_c, ln_post_odds=ln_post_odds, ln_prior_odds=ln_prior_odds)
+}
+
+mediation_bf_new <- function(y, M, X, Z = NULL, w = NULL,
+                         kappa = rep(0.001, 6),
+                         lambda = rep(0.001, 6),
+                         tau_sq_mu = rep(1000, 6),
+                         tau_sq_Z = rep(1000, 6),
+                         phi_sq_X = c(NA,NA,1,0.5,NA,1),
+                         phi_sq_m = c(NA,1,NA,0.5,NA,NA),
+                         ln_prior_c = rep(log(1/8), 8),
+                         verbose = T) {
+  if(verbose){print("Initializing", quote=F)}
+  
+  #dimensions
+  n <- nrow(X)
+  d <- ncol(X)-1
+  p <- ncol(Z)
+  
+  #default values for w and Z
+  if (is.null(w)){w <- rep(1, n)}
+  if (is.null(Z)){Z <- matrix(NA, n, 0); p <- 0}
+  
+  #ensure M and Z are matrices
+  M <- as.matrix(M)
+  Z <- as.matrix(Z)
+  
+  #drop observations with missing y
+  complete_y <- !is.na(y)
+  
+  y <- y[complete_y]
+  M <- M[complete_y,,drop=F]
+  X <- X[complete_y,,drop=F]
+  Z <- Z[complete_y,,drop=F]
+  w <- w[complete_y]
+  
+  #scale y, M, and Z
+  y <- c(scale(y))
+  M <- apply(M, 2, scale)
+  if (p > 0){Z <- apply(Z, 2, scale)}
+  
+  #precomputed quantities for design matrices
+  C <- sumtozero_contrast(ncol(X))
+  XC <- X%*%C
+  ones <- matrix(1, nrow(XC))
+  
+  #likelihood models for all hypothesis
+  #encoded by presence of absence of "XY,XM,MY" edges on the DAG
+  #H1: "0,-,0" y does not depend on X or m
+  #H2: "0,-,1" y depends on m but not on X
+  #H3: "1,-,0" y depends on X but not on m
+  #H4: "1,-,1" y depends on X and m
+  #H5: "-,0,-" m does not depend on X
+  #H6: "-,1,-" m depends on X
+  #all have covariates Z
+  
+  #design matrices for H1,H3,H5,H6 complete cases (do not depend on m)
+  X1 <- cbind(ones, Z)
+  X3 <- cbind(ones, XC, Z)
+  X5 <- X1
+  X6 <- X3
+  
+  #check if all scale hyperparameters are identical for H1 and H5
+  #implies sigma1 and sigma5 identical, used to reduce computations
+  sigma5_equal_sigma1 <- all(lambda[1]==lambda[5],
+                             tau_sq_mu[1] == tau_sq_mu[5], 
+                             phi_sq_X[1] == phi_sq_X[5],
+                             tau_sq_Z[1] == tau_sq_Z[5])
+  
+  #check if all scale hyperparameters are identical for H3 and H6
+  #implies sigma3 and sigma6 identical, used to reduce computations
+  sigma6_equal_sigma3 <- all(lambda[3]==lambda[6],
+                             tau_sq_mu[3] == tau_sq_mu[6], 
+                             tau_sq_Z[3] == tau_sq_Z[6])
+  
+  #prior variance matrices (diagonal) for H1-H6 
+  v1 <- c(tau_sq_mu[1], rep(tau_sq_Z[1], p))
+  v2 <- c(tau_sq_mu[2], rep(tau_sq_Z[2], p), phi_sq_m[2])
+  v3 <- c(tau_sq_mu[3], rep(phi_sq_X[3], d), rep(tau_sq_Z[3], p))
+  v4 <- c(tau_sq_mu[4], rep(phi_sq_X[4], d), rep(tau_sq_Z[4], p), phi_sq_m[4])
+  
+  if (!sigma5_equal_sigma1){
+    v5 <- c(tau_sq_mu[5], rep(tau_sq_Z[5], p))
+  }
+  
+  if (!sigma6_equal_sigma3){
+    v6 <- c(tau_sq_mu[6], rep(phi_sq_X[6], d), rep(tau_sq_Z[6], p))
+  }
+  
+  #scale matrices for H1,H3,H5,H6 complete cases (do not depend on m)
+  sigma1 <- crossprod(sqrt(lambda[1]*v1)*t(X1))
+  sigma3 <- crossprod(sqrt(lambda[3]*v3)*t(X3))
+  
+  diag(sigma1) <- diag(sigma1) + lambda[1]/w
+  diag(sigma3) <- diag(sigma3) + lambda[3]/w
+  
+  if (!sigma5_equal_sigma1){
+    sigma5 <- crossprod(sqrt(lambda[5]*v5)*t(X5))
+    diag(sigma5) <- diag(sigma5) + lambda[5]/w
+  }
+  
+  if (!sigma6_equal_sigma3){
+    sigma6 <- crossprod(sqrt(lambda[6]*v6)*t(X6))
+    diag(sigma6) <- diag(sigma6) + lambda[6]/w
+  }
+  
+  #object to store likelihoods
+  ln_prob_data=matrix(NA, ncol(M), 6)
+  rownames(ln_prob_data) <- colnames(M)
+  colnames(ln_prob_data) <- c("0,-,0", 
+                              "0,-,1", 
+                              "1,-,0", 
+                              "1,-,1",
+                              "-,0,-", 
+                              "-,1,-")
+  
+  #identify batches of M that have the same pattern of missing values
+  missing_m <- batch_cols(M)
+  
+  #iterate over batches of M with same pattern of missing values
+  if(verbose){print("Iterating", quote=F)}
+  counter <- 0
+  
+  for (b in 1:length(missing_m)){
+    #subset to non-missing observations
+    index <- rep(T, length(y))
+    index[missing_m[[b]]$omit] <- F
+    
+    if (any(index)){
+      y_subset <- y[index]
+      w_subset <- w[index]
+      
+      #cholesky matrices for H1,H3,H5,H6 non-missing observations (do not depend on m)
+      sigma1_chol_subset <- chol(sigma1[index,index])
+      sigma3_chol_subset <- chol(sigma3[index,index])
+      
+      if (sigma5_equal_sigma1){
+        sigma5_chol_subset <- sigma1_chol_subset
+      } else {
+        sigma5_chol_subset <- chol(sigma5[index,index])
+      }
+      
+      if (sigma6_equal_sigma3){
+        sigma6_chol_subset <- sigma3_chol_subset
+      } else {
+        sigma6_chol_subset <- chol(sigma6[index,index])
+      }
+      
+      #compute H1 and H3 outside of the mediator loop (invariant)
+      ln_prob_data1 <- dmvt_chol(y_subset, sigma_chol=sigma1_chol_subset, df = kappa[1])
+      ln_prob_data3 <- dmvt_chol(y_subset, sigma_chol=sigma3_chol_subset, df = kappa[3])
+      
+      #iterate over mediators
+      for (i in missing_m[[b]]$cols){
+        counter <- counter + 1
+        if (counter%%1000==0 & verbose){print(paste(counter, "of", ncol(M)), quote=F)}
+        
+        #set current mediator non-missing observations
+        m_subset <- M[index,i]
+        
+        #design matrix for H2 and H4 non-missing observations
+        X2_subset <- cbind(X1[index,,drop=F], m_subset)
+        X4_subset <- cbind(X3[index,,drop=F], m_subset)
+        
+        #scale and cholesky matrices for H2 and H4 non-missing observations
+        sigma2_subset <- crossprod(sqrt(lambda[2]*v2)*t(X2_subset))
+        sigma4_subset <- crossprod(sqrt(lambda[4]*v4)*t(X4_subset))
+        
+        diag(sigma2_subset) <- lambda[2]/w_subset + diag(sigma2_subset)
+        diag(sigma4_subset) <- lambda[4]/w_subset + diag(sigma4_subset)
+        
+        sigma2_chol_subset <- chol(sigma2_subset)
+        sigma4_chol_subset <- chol(sigma4_subset)
+        
+        #compute likelihoods for H1-H6
+        ln_prob_data[i,1] <- ln_prob_data1
+        ln_prob_data[i,3] <- ln_prob_data3
+        
+        ln_prob_data[i,2] <- dmvt_chol(y_subset, sigma_chol=sigma2_chol_subset, df = kappa[2])
+        ln_prob_data[i,4] <- dmvt_chol(y_subset, sigma_chol=sigma4_chol_subset, df = kappa[4])
+        ln_prob_data[i,5] <- dmvt_chol(m_subset, sigma_chol=sigma5_chol_subset, df = kappa[5])
+        ln_prob_data[i,6] <- dmvt_chol(m_subset, sigma_chol=sigma6_chol_subset, df = kappa[6])
+      }
+    }
+  }
+  
+  #compute posterior for all cases
+  #compute posterior odds for specified combinations of cases
+  #cases encoded by presence of absence of "XY,XM,MY" edges on the DAG
+  #c1: "0,0,0" H1 and H5
+  #c2: "0,0,1" H2 and H5
+  #c3: "0,1,0" H1 and H6
+  #c4: "0,1,1" H2 and H6 - complete mediation
+  #c5: "1,0,0" H3 and H5 
+  #c6: "1,0,1" H4 and H5
+  #c7: "1,1,0" H3 and H6 - colocalization
+  #c8: "1,1,1" H4 and H6 - partial mediation
+  output <- posterior_summary(ln_prob_data, ln_prior_c, list(c(4,8),8,4,7))
+  colnames(output$ln_post_odds) <- c("mediation", "partial", "complete", "colocal")
+  colnames(output$ln_prior_odds) <- colnames(output$ln_post_odds)
+  
+  #return results
+  output$ln_prior_c <- ln_prior_c
+  output$ln_prob_data <- ln_prob_data
+  output <- output[c(5,1,2,4,2,3)]
+  
+  if (verbose) { print("Done", quote=F) }
+  output
 }
