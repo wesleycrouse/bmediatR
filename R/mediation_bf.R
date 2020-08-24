@@ -490,15 +490,15 @@ posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator, c_denominat
   }
   
   #compute posterior probabilities for all cases
-  #cases encoded by presence or absence of 'X->Y, X->M, M->Y' edges on the DAG
-  #c1: '0,0,0' H1 and H5
-  #c2: '0,0,1' H2 and H5
-  #c3: '0,1,0' H1 and H6
-  #c4: '0,1,1' H2 and H6
-  #c5: '1,0,0' H3 and H5 
-  #c6: '1,0,1' H4 and H5
-  #c7: '1,1,0' H3 and H6
-  #c8: '1,1,1' H4 and H6
+  #cases encoded by presence or absence of 'X->y, X->m, m->y' edges on the DAG
+  #c1: '0,0,0' / H1 and H5
+  #c2: '0,0,1' / H2 and H5
+  #c3: '0,1,0' / H1 and H6
+  #c4: '0,1,1' / H2 and H6
+  #c5: '1,0,0' / H3 and H5 
+  #c6: '1,0,1' / H4 and H5
+  #c7: '1,1,0' / H3 and H6
+  #c8: '1,1,1' / H4 and H6
   ln_post_c <- cbind(ln_prob_data[,1] + ln_prob_data[,5] + ln_prior_c[,1],
                      ln_prob_data[,2] + ln_prob_data[,5] + ln_prior_c[,2],
                      ln_prob_data[,1] + ln_prob_data[,6] + ln_prior_c[,3],
@@ -575,13 +575,13 @@ mediation_bf_new <- function(y, M, X, Z = NULL, w = NULL,
   ones <- matrix(1, nrow(XC))
   
   #likelihood models for all hypothesis
-  #hypotheses encoded by presence or absence of 'X->Y, X->M, M->Y' edges on the DAG
-  #H1: '0,-,0' y does not depend on X or m
-  #H2: '0,-,1' y depends on m but not on X
-  #H3: '1,-,0' y depends on X but not on m
-  #H4: '1,-,1' y depends on X and m
-  #H5: '-,0,-' m does not depend on X
-  #H6: '-,1,-' m depends on X
+  #hypotheses encoded by presence or absence of 'X->y, X->m, m->y' edges on the DAG
+  #H1: '0,-,0' / y does not depend on X or m
+  #H2: '0,-,1' / y depends on m but not on X
+  #H3: '1,-,0' / y depends on X but not on m
+  #H4: '1,-,1' / y depends on X and m
+  #H5: '-,0,-' / m does not depend on X
+  #H6: '-,1,-' / m depends on X
   #all include covariates Z
   
   #design matrices for H1,H3,H5,H6 complete cases (do not depend on m)
@@ -716,15 +716,15 @@ mediation_bf_new <- function(y, M, X, Z = NULL, w = NULL,
   
   #compute posterior for all cases
   #compute posterior odds for specified combinations of cases
-  #cases encoded by presence or absence of 'X->Y, X->M, M->Y' edges on the DAG
-  #c1: '0,0,0' H1 and H5
-  #c2: '0,0,1' H2 and H5
-  #c3: '0,1,0' H1 and H6
-  #c4: '0,1,1' H2 and H6 - complete mediation
-  #c5: '1,0,0' H3 and H5 
-  #c6: '1,0,1' H4 and H5
-  #c7: '1,1,0' H3 and H6 - colocalization
-  #c8: '1,1,1' H4 and H6 - partial mediation
+  #cases encoded by presence or absence of 'X->y, X->m, m->y' edges on the DAG
+  #c1: '0,0,0' / H1 and H5
+  #c2: '0,0,1' / H2 and H5
+  #c3: '0,1,0' / H1 and H6
+  #c4: '0,1,1' / H2 and H6 - complete mediation
+  #c5: '1,0,0' / H3 and H5 
+  #c6: '1,0,1' / H4 and H5
+  #c7: '1,1,0' / H3 and H6 - colocalization
+  #c8: '1,1,1' / H4 and H6 - partial mediation
   output <- posterior_summary(ln_prob_data, ln_prior_c, list(c(4,8),8,4,7))
   colnames(output$ln_post_odds) <- c("mediation", "partial", "complete", "colocal")
   colnames(output$ln_prior_odds) <- colnames(output$ln_post_odds)
@@ -740,22 +740,22 @@ mediation_bf_new <- function(y, M, X, Z = NULL, w = NULL,
 
 model_info <- function(){
   writeLines(c("likelihood models for all hypotheses",
-               "hypotheses encoded by presence or absence of 'X->Y, X->M, M->Y' edges on the DAG",
-               "H1: '0,-,0' y does not depend on X or m",
-               "H2: '0,-,1' y depends on m but not on X",
-               "H3: '1,-,0' y depends on X but not on m",
-               "H4: '1,-,1' y depends on X and m",
-               "H5: '-,0,-' m does not depend on X",
-               "H6: '-,1,-' m depends on X",
+               "hypotheses encoded by presence or absence of 'X->y, X->m, m->y' edges on the DAG",
+               "H1: '0,-,0' / y does not depend on X or m",
+               "H2: '0,-,1' / y depends on m but not on X",
+               "H3: '1,-,0' / y depends on X but not on m",
+               "H4: '1,-,1' / y depends on X and m",
+               "H5: '-,0,-' / m does not depend on X",
+               "H6: '-,1,-' / m depends on X",
                "",
                "combinations of hypotheses for all cases",
-               "cases encoded by presence or absence of 'X->Y, X->M, M->Y' edges on the DAG",
-               "c1: '0,0,0' H1 and H5",
-               "c2: '0,0,1' H2 and H5",
-               "c3: '0,1,0' H1 and H6",
-               "c4: '0,1,1' H2 and H6 - complete mediation",
-               "c5: '1,0,0' H3 and H5 ",
-               "c6: '1,0,1' H4 and H5",
-               "c7: '1,1,0' H3 and H6 - colocalization",
-               "c8: '1,1,1' H4 and H6 - partial mediation"))
+               "cases encoded by presence or absence of 'X->y, X->m, m->y' edges on the DAG",
+               "c1: '0,0,0' / H1 and H5",
+               "c2: '0,0,1' / H2 and H5",
+               "c3: '0,1,0' / H1 and H6",
+               "c4: '0,1,1' / H2 and H6 - complete mediation",
+               "c5: '1,0,0' / H3 and H5 ",
+               "c6: '1,0,1' / H4 and H5",
+               "c7: '1,1,0' / H3 and H6 - colocalization",
+               "c8: '1,1,1' / H4 and H6 - partial mediation"))
 }
