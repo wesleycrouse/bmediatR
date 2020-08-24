@@ -82,12 +82,12 @@ mediation_bf <- function(y, M, X, Z = NULL, w = NULL,
                          verbose = T) {
   if (verbose) { print("Initializing", quote=F) }
   
-  # dimensions
+  #dimensions
   n <- nrow(X)
   d <- ncol(X) - 1
   p <- ncol(Z)
   
-  # default values for w and Z
+  #default values for w and Z
   if (is.null(w)) { w <- rep(1, n) }
   if (is.null(Z)) { Z <- matrix(NA, n, 0); p <- 0 }
   
