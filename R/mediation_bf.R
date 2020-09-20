@@ -471,7 +471,7 @@ mediation_bf_simple <- function(y, M, X, Z = NULL, w = NULL,
   list(lnp_data_H=lnp_data_H, ln_post_c=ln_post_c, lnBF_partmed=lnBF_partmed, lnBF_coloc=lnBF_coloc)
 }
 
-posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator, c_denominator=NULL){
+posterior_summary <- function(ln_prob_data, ln_prior_c, M, c_numerator, c_denominator=NULL){
   #function to compute log odds from log probabilities
   ln_odds <- function(ln_p, numerator){
     ln_odds_numerator <- apply(ln_p[,numerator,drop=F], 1, matrixStats::logSumExp)
@@ -594,7 +594,7 @@ mediation_bf_new <- function(y, M, X, Z = NULL, w = NULL,
   #implies sigma1 and sigma5 identical, used to reduce computations
   sigma5_equal_sigma1 <- all(lambda[1]==lambda[5],
                              tau_sq_mu[1] == tau_sq_mu[5], 
-                             phi_sq_X[1] == phi_sq_X[5],
+                             #phi_sq_X[1] == phi_sq_X[5],
                              tau_sq_Z[1] == tau_sq_Z[5])
   
   #check if all scale hyperparameters are identical for H3 and H6
@@ -725,7 +725,7 @@ mediation_bf_new <- function(y, M, X, Z = NULL, w = NULL,
   #c6: '1,0,1' / H4 and H5
   #c7: '1,1,0' / H3 and H6 - colocalization
   #c8: '1,1,1' / H4 and H6 - partial mediation
-  output <- posterior_summary(ln_prob_data, ln_prior_c, list(c(4,8),8,4,7))
+  output <- posterior_summary(ln_prob_data, ln_prior_c, M = M, list(c(4,8),8,4,7))
   colnames(output$ln_post_odds) <- c("mediation", "partial", "complete", "colocal")
   colnames(output$ln_prior_odds) <- colnames(output$ln_post_odds)
   
