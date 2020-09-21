@@ -471,7 +471,7 @@ mediation_bf_simple <- function(y, M, X, Z = NULL, w = NULL,
   list(lnp_data_H=lnp_data_H, ln_post_c=ln_post_c, lnBF_partmed=lnBF_partmed, lnBF_coloc=lnBF_coloc)
 }
 
-posterior_summary <- function(ln_prob_data, ln_prior_c, M, c_numerator, c_denominator=NULL){
+posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator, c_denominator=NULL){
   #function to compute log odds from log probabilities
   ln_odds <- function(ln_p, numerator){
     ln_odds_numerator <- apply(ln_p[,numerator,drop=F], 1, matrixStats::logSumExp)
@@ -486,7 +486,7 @@ posterior_summary <- function(ln_prob_data, ln_prior_c, M, c_numerator, c_denomi
   
   #ensure ln_prior_c is a matrix
   if (!is.matrix(ln_prior_c)){
-    ln_prior_c <- matrix(ln_prior_c, ncol(M), length(ln_prior_c))
+    ln_prior_c <- matrix(ln_prior_c, nrow(ln_prob_data), length(ln_prior_c))
   }
   
   #compute posterior probabilities for all cases
