@@ -250,3 +250,79 @@ plot_posterior_bar <- function(med_bf_object,
   p
 }
 
+## Plotting posterior odds for the updated mediation function
+plot_posterior_odds <- function(med_object, 
+                                model_type = c("mediation", "partial", "complete", "colocal"),
+                                med_annot, 
+                                med_var = "protein.id",
+                                include_chr = c(1:19, "X"), 
+                                expand_lim_factor = 0.025, 
+                                label_thresh = NULL, 
+                                bgcol = "white", altcol = "gray", altbgcol = "white", 
+                                hlines_col = "gray80", col = "black", cex = 0.75,
+                                qtl_dat = NULL,
+                                outcome_symbol = NULL,
+                                ...) {
+  
+  model_type <- model_type[1]
+  
+  post_odds <- matrix(med_object[["ln_post_odds"]][,model_type], ncol = 1)
+  rownames(post_odds) <- rownames(med_object[["ln_post_odds"]])
+  class(post_odds) <- "scan1"
+  
+  med_map_df <- med_annot %>%
+    dplyr::select(tidyselect::all_of(med_var), symbol, chr, middle) %>%
+    dplyr::filter(chr %in% include_chr) %>%
+    dplyr::mutate(chr = factor(chr, levels = c(1:19, "X"))) %>%
+    as.data.frame %>% 
+    dplyr::arrange(chr)
+  if (!is.null(qtl_dat)) {
+    ## Add QTL to map for plotting
+    med_map_df <- dplyr::bind_rows(med_map_df,
+                                   qtl_dat %>%
+                                     dplyr::mutate((!!as.symbol(med_var)) := "QTL",
+                                                   symbol = "QTL") %>%
+                                     dplyr::rename(middle = pos) %>%
+                                     dplyr::select(tidyselect::all_of(med_var), symbol, chr, middle))
+  }
+  med_map <- map_df_to_list(map = med_map_df, marker_column = med_var, pos_column = "middle")
+  
+  gap <- sum(qtl2::chr_lengths(map))/100
+  
+  lim_shift <- (max(post_odds[,1]) - min(post_odds[,1])) * expand_lim_factor
+  qtl2:::plot.scan1(post_odds, map = med_map, ylab = "Log posterior odds", type = "p", pch = 20, 
+                    ylim = c(min(post_odds[,1]) - lim_shift, max(post_odds[,1]) + lim_shift),
+                    bgcol = bgcol, altcol = altcol, altbgcol = altbgcol, hlines_col = hlines_col, col = col, 
+                    cex = cex, gap = gap,
+                    ...)
+  
+  xpos <- qtl2:::map_to_xpos(map = med_map, gap = gap)
+  
+  if (!is.null(label_thresh) & any(post_odds > label_thresh)) {
+    labels <- rownames(post_odds)[post_odds > label_thresh]
+    
+    label_map_df <- med_map_df %>%
+      filter((!!as.symbol(med_var)) %in% labels) 
+    
+    for (i in 1:nrow(label_map_df)) {
+      lab_pos <- xpos[label_map_df[i, med_var]]
+      lab_post_odds <- post_odds[label_map_df[i, med_var],]
+      
+      text(x = lab_pos, y = lab_post_odds, label_map_df$symbol[i], font = 3)
+    }
+  }
+  if (!is.null(outcome_symbol)) {
+    rug(x = xpos[med_annot %>% 
+                   dplyr::filter(symbol == outcome_symbol) %>% 
+                   pull(tidyselect::all_of(med_var))],
+        lwd = 3,
+        col = "black")
+  }
+  if (!is.null(qtl_dat)) {
+    rug(x = xpos["QTL"],
+        lwd = 3,
+        col = "red")
+  }
+}
+
+
