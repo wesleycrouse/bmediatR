@@ -164,7 +164,8 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
   if (is.null(w)){w <- rep(1, n)}
   if (is.null(Z)){Z <- matrix(NA, n, 0); p <- 0}
   
-  #ensure M and Z are matrices
+  #ensure X, M, and Z are matrices
+  X <- as.matrix(X)
   M <- as.matrix(M)
   Z <- as.matrix(Z)
   
