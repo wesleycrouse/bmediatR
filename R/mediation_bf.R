@@ -714,7 +714,7 @@ mediation_bf_new <- function(y, M, X, Z = NULL, w = NULL,
     }
   }
   
-  #compute posterior for all cases
+  #compute posterior probabilities for all cases
   #compute posterior odds for specified combinations of cases
   #cases encoded by presence or absence of 'X->y, X->m, m->y' edges on the DAG
   #c1: '0,0,0' / H1 and H5
