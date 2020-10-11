@@ -725,7 +725,7 @@ mediation_bf_new <- function(y, M, X, Z = NULL, w = NULL,
   #c6: '1,0,1' / H4 and H5
   #c7: '1,1,0' / H3 and H6 - colocalization
   #c8: '1,1,1' / H4 and H6 - partial mediation
-  output <- posterior_summary(ln_prob_data, ln_prior_c, M = M, list(c(4,8),8,4,7))
+  output <- posterior_summary(ln_prob_data, ln_prior_c, list(c(4,8),8,4,7))
   colnames(output$ln_post_odds) <- c("mediation", "partial", "complete", "colocal")
   colnames(output$ln_prior_odds) <- colnames(output$ln_post_odds)
   
