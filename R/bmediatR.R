@@ -66,8 +66,20 @@ posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator, c_denominat
     c_numerator <- list(c_numerator)
   }
   
-  #ensure ln_prior_c is a matrix
-  if (!is.matrix(ln_prior_c)){
+  #presets for ln_prior_c; 
+  if (ln_prior_c=="complete"){
+    ln_prior_c <- c(rep(0,8), rep(-Inf,4))
+  } else if (ln_prior_c=="partial"){
+    ln_prior_c <- c(rep(-Inf,4), rep(0,4), rep(-Inf,4))
+  } else if (ln_prior_c=="reactive"){
+    ln_prior_c <- rep(0,12)
+  }
+  
+  #ensure ln_prior_c sum to 1 on probability scale and that it is a matrix
+  if (is.matrix(ln_prior_c)){
+    ln_prior_c <- t(apply(ln_prior_c, 1, function(x){x - matrixStats::logSumExp(x)}))
+  } else {
+    ln_prior_c <- ln_prior_c - matrixStats::logSumExp(ln_prior_c)
     ln_prior_c <- matrix(ln_prior_c, nrow(ln_prob_data), length(ln_prior_c), byrow=T)
   }
   
@@ -153,7 +165,7 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
     ln_prior_c <- rep(0,12)
   }
   
-  #ensure prior probabilities sum to 1
+  #ensure ln_prior_c sum to 1 on probability scale
   if (is.matrix(ln_prior_c)){
     ln_prior_c <- t(apply(ln_prior_c, 1, function(x){x - matrixStats::logSumExp(x)}))
   } else {
