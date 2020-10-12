@@ -8,6 +8,7 @@ plot_posterior(
   med_bf_object,
   post_col = c(4, 8),
   med_annot,
+  med_var = "protein.id",
   include_chr = c(1:19, "X"),
   expand_lim_factor = 0.025,
   label_thresh = NULL,

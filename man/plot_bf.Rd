@@ -8,6 +8,7 @@ plot_bf(
   med_bf_object,
   bf_type = "lnBF_med",
   med_annot,
+  med_var = "protein.id",
   include_chr = c(1:19, "X"),
   expand_lim_factor = 0.025,
   label_thresh = NULL,

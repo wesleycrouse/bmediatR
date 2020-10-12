@@ -6,7 +6,7 @@
 \usage{
 plot_posterior_bar(
   med_bf_object,
-  med_annot,
+  med_annot = NULL,
   mediator_id,
   med_var = "protein.id",
   stack = FALSE

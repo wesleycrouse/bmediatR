@@ -53,6 +53,18 @@ batch_cols <- function(mat) {
   }
 }
 
+#' Summaries of posterior model probabilities function 
+#'
+#' This function takes the log posterior probability of the data (posterior likelihood) for the various models, the log prior model probabilities, and
+#' returns log posterior odds
+#'
+#' @param ln_prob_data Log posterior likelihoods under the various models, returned by bmediatR().
+#' @param ln_prior_c Log prior model probabilities. If posterior_summary() is being used for a non-default posterior odds
+#' summary, the log prior model probabilities used with bmediatR() are stored in its output.
+#' @param c_numerator The index of models to be summed in the numberator of the posterior odds. Models and their order provided with
+#' model_summary().
+#' @export
+#' @examples bmediatR()
 posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator, c_denominator=NULL){
   #function to compute log odds from log probabilities
   ln_odds <- function(ln_p, numerator){
@@ -138,6 +150,24 @@ posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator, c_denominat
   list(ln_post_c=ln_post_c, ln_post_odds=ln_post_odds, ln_prior_odds=ln_prior_odds)
 }
 
+#' Bayesian model selection for mediation analysis function 
+#'
+#' This function takes an outcome, mediator(s), and a driver as a design matrix to perform a Bayesian model selection analysis for mediation.
+#'
+#' @param y Vector or single column matrix of an outcome variable. Single outcome variable expected. 
+#' Names or rownames must match across M and X, and Z and w (if provided).
+#' @param M Vector or matrix of mediator variables. Multiple mediator variables are supported. 
+#' Names or rownames must match across y and X, and Z and w (if provided).
+#' @param X Design matrix of the driver. Names or rownames must match across y and M, and Z and w (if provided).
+#' One common application is for X to represent genetic information at a QTL as either founder strain haplotypes
+#' in a multiparental population or variant genotypes, though it is generalizable to types of variables.
+#' @param Z DEFAULT: NULL. Design matrix of covariates that influence the outcome variable. Names or rownames must match across y, M and X, 
+#' and w (if provided).
+#' @param w DEFAULT: NULL. Vector of weights for individuals in analysis. Names or rownames must match across y, M X, and Z (if provided).
+#' A common use would be for an analysis of strain means, where w would be a vector of the number of individuals per strain.
+#' If no w is given, observations are equally weighted as 1.
+#' @export
+#' @examples bmediatR()
 bmediatR <- function(y, M, X, Z = NULL, w = NULL,
                      kappa = rep(0.001, 8),
                      lambda = rep(0.001, 8),
@@ -409,6 +439,12 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
   output
 }
 
+#' Definions and encodings for models included in the mediation analysis through Bayesian model selection 
+#'
+#' This function prints out a table describing the models considered in the mediation analysis
+#'
+#' @export
+#' @examples model_info()
 model_info <- function(){
   writeLines(c("likelihood models for all hypotheses",
                "hypotheses encoded by presence (1) or absence (0) of 'X->y, X->m, m->y' edges on the DAG",
