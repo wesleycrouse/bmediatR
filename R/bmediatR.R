@@ -214,14 +214,15 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
   M <- as.matrix(M)
   Z <- as.matrix(Z)
   
-  #drop observations with missing y and update n
+  #drop observations with missing y or X and update n
   complete_y <- !is.na(y)
+  complete_X <- !apply(is.na(X), 1, any)
   
-  y <- y[complete_y]
-  M <- M[complete_y,,drop=F]
-  X <- X[complete_y,,drop=F]
-  Z <- Z[complete_y,,drop=F]
-  w <- w[complete_y]
+  y <- y[complete_y & complete_X]
+  M <- M[complete_y & complete_X,,drop=F]
+  X <- X[complete_y & complete_X,,drop=F]
+  Z <- Z[complete_y & complete_X,,drop=F]
+  w <- w[complete_y & complete_X]
   
   n <- length(y)
   
