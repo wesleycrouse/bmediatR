@@ -65,7 +65,7 @@ batch_cols <- function(mat) {
 #' model_summary().
 #' @export
 #' @examples bmediatR()
-posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator, c_denominator=NULL){
+posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator){
   #function to compute log odds from log probabilities
   ln_odds <- function(ln_p, numerator){
     ln_odds_numerator <- apply(ln_p[,numerator,drop=F], 1, matrixStats::logSumExp)
