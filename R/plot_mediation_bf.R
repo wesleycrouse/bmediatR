@@ -202,7 +202,7 @@ plot_posterior <- function(med_bf_object,
 #' @export
 #' @examples plot_posterior_bar()
 plot_posterior_bar <- function(med_bf_object,
-                               med_annot,
+                               med_annot = NULL,
                                mediator_id,
                                med_var = "protein.id",
                                stack = FALSE) {
@@ -212,9 +212,17 @@ plot_posterior_bar <- function(med_bf_object,
     rownames_to_column(med_var) %>% 
     mutate("partial mediator" = exp(V4),
            "full mediator" = exp(V8),
-           "co-local" = exp(V3)) %>%
-    left_join(med_annot %>%
-                dplyr::select(tidyselect::all_of(med_var), symbol))
+           "co-local" = exp(V3))
+  
+  ## Using annotation information
+  if (!is.null(med_annot)) {
+    posterior_dat <- posterior_dat %>%
+      left_join(med_annot %>%
+                  dplyr::select(tidyselect::all_of(med_var), symbol))
+  } else {
+    posterior_dat <- posterior_dat %>%
+      mutate(symbol = get(med_var))
+  }
   posterior_dat <- posterior_dat %>%
     left_join(posterior_dat %>%
                 group_by_at(dplyr::vars(tidyselect::all_of(med_var))) %>%
@@ -228,7 +236,7 @@ plot_posterior_bar <- function(med_bf_object,
                      panel.background = element_blank(), 
                      axis.line = element_line(colour = "black"),
                      plot.title = element_text(hjust = 0.5, size = 16, face = "plain"), 
-                     axis.title.x = element_text(size = 14, face = "plain"),
+                     axis.title.x = element_blank(),
                      axis.text.x = element_text(hjust = 0.5, size = 14, face = "plain"),
                      axis.title.y = element_text(size = 14, face = "plain"),
                      axis.text.y = element_text(size = 14, face = "plain"),
