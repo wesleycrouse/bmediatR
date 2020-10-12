@@ -185,7 +185,7 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
   M <- apply(M, 2, scale)
   if (p > 0){Z <- apply(Z, 2, scale)}
   
-  #optionally to apply sum-to-zero contrast for X
+  #optionally use sum-to-zero contrast for X
   #recommended when X is a matrix of factors, with a column for every factor level
   if (options_X$sum_to_zero==T){
     C <- sumtozero_contrast(ncol(X))
@@ -196,7 +196,7 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
   #optionally center and scale X
   X <- apply(X, 2, scale, center=options_X$center, scale=options_X$scale)
   
-  #column design matrices for mu
+  #column design matrix for mu
   ones <- matrix(1, n)
   
   #identify likelihoods that are not supported by the prior
