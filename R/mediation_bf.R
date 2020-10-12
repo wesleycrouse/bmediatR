@@ -471,7 +471,7 @@ mediation_bf_simple <- function(y, M, X, Z = NULL, w = NULL,
   list(lnp_data_H=lnp_data_H, ln_post_c=ln_post_c, lnBF_partmed=lnBF_partmed, lnBF_coloc=lnBF_coloc)
 }
 
-posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator, c_denominator=NULL){
+posterior_summary_old <- function(ln_prob_data, ln_prior_c, c_numerator, c_denominator=NULL){
   #function to compute log odds from log probabilities
   ln_odds <- function(ln_p, numerator){
     ln_odds_numerator <- apply(ln_p[,numerator,drop=F], 1, matrixStats::logSumExp)
@@ -725,7 +725,7 @@ mediation_bf_new <- function(y, M, X, Z = NULL, w = NULL,
   #c6: '1,0,1' / H4 and H5
   #c7: '1,1,0' / H3 and H6 - colocalization
   #c8: '1,1,1' / H4 and H6 - partial mediation
-  output <- posterior_summary(ln_prob_data, ln_prior_c, list(c(4,8),8,4,7))
+  output <- posterior_summary_old(ln_prob_data, ln_prior_c, list(c(4,8),8,4,7))
   colnames(output$ln_post_odds) <- c("mediation", "partial", "complete", "colocal")
   colnames(output$ln_prior_odds) <- colnames(output$ln_post_odds)
   
