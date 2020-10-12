@@ -79,11 +79,11 @@ posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator, c_denominat
   }
   
   #presets for ln_prior_c; 
-  if (ln_prior_c=="complete"){
+  if (ln_prior_c[1]=="complete"){
     ln_prior_c <- c(rep(0,8), rep(-Inf,4))
-  } else if (ln_prior_c=="partial"){
+  } else if (ln_prior_c[1]=="partial"){
     ln_prior_c <- c(rep(-Inf,4), rep(0,4), rep(-Inf,4))
-  } else if (ln_prior_c=="reactive"){
+  } else if (ln_prior_c[1]=="reactive"){
     ln_prior_c <- rep(0,12)
   }
   
