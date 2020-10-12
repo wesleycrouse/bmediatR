@@ -1,9 +1,9 @@
-Package: BFmediatR
-Title: Toolset for running Bayesian mediation analysis using Bayes factors
+Package: bmediatR
+Title: Toolset for running Bayesian mediation model selection analysis
 Version: 0.1.1
 Authors@R: c(person("Gregory", "Keele", role = "aut"),
              person("Wesley", "Crouse", email = "wesleycrouse@gmail.com", role = c("aut", "cre")))
-Description: This package performs Bayesian mediation analysis with inference via Bayes factors.
+Description: This package performs Bayesian mediation model selection analysis.
 Depends: R (>= 3.6.1)
 License: GPL (>= 2)
 Encoding: UTF-8
