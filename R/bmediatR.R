@@ -135,6 +135,7 @@ posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator){
                            "0,1,*",
                            "1,0,*",
                            "1,1,*")
+  rownames(ln_post_c) <- rownames(ln_prob_data)
   
   #compute prior odds for each combination of cases
   ln_prior_odds <- sapply(c_numerator, ln_odds, ln_p=ln_prior_c)
