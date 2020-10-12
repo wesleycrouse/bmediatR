@@ -138,11 +138,13 @@ posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator){
   
   #compute prior odds for each combination of cases
   ln_prior_odds <- sapply(c_numerator, ln_odds, ln_p=ln_prior_c)
+  ln_prior_odds <- matrix(ln_prior_odds, ncol=length(c_numerator))
   rownames(ln_prior_odds) <- rownames(ln_post_c)
   colnames(ln_prior_odds) <- c_numerator
   
   #compute posterior odds for each combination of cases
   ln_post_odds <- sapply(c_numerator, ln_odds, ln_p=ln_post_c)
+  ln_post_odds <- matrix(ln_post_odds, ncol=length(c_numerator))
   rownames(ln_post_odds) <- rownames(ln_post_c)
   colnames(ln_post_odds) <- c_numerator
   
