@@ -5,12 +5,24 @@
 \title{Barplot of posterior model probabilities function}
 \usage{
 plot_posterior_bar(
-  med_bf_object,
+  bmediatR_object,
   med_annot = NULL,
   mediator_id,
   med_var = "protein.id",
   stack = FALSE
 )
+}
+\arguments{
+\item{bmediatR_object}{Output from bmediatR().}
+
+\item{med_annot}{Annotation data for -omic mediators.}
+
+\item{mediator_id}{Which mediator to plot posterior model probabilities for.}
+
+\item{med_var}{DEFAULT: "protein.id". The column in med_annot to be used as a mediator id.}
+
+\item{stack}{DEFAULT: FALSE. If TRUE, a stacked barplot is produced. If FALSE, a staggered
+barplot is produced.}
 }
 \description{
 This function takes posterior probability results from mediation_bf() and plots barplots of posterior model probabilities.

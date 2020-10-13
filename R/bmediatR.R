@@ -435,7 +435,9 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
   colnames(output$ln_prior_odds) <- colnames(output$ln_post_odds)
   
   #return results
-  output$ln_prior_c <- ln_prior_c
+  output$ln_prior_c <- matrix(ln_prior_c, nrow = 1)
+  colnames(output$ln_prior_c) <- colnames(output$ln_post_c)
+    
   output$ln_prob_data <- ln_prob_data
   output <- output[c(5,1,2,4,2,3)]
   

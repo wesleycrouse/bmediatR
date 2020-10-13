@@ -310,7 +310,7 @@ mediation_bf <- function(y, M, X, Z = NULL, w = NULL,
 #' A common use would be for an analysis of strain means, where w would be a vector of the number of individuals per strain.
 #' If no w is given, observations are equally weighted as 1.
 #' @export
-#' @examples mediation_bf()
+#' @examples mediation_bf_simple()
 mediation_bf_simple <- function(y, M, X, Z = NULL, w = NULL,
                                 kappa = rep(0.001, 4),
                                 lambda = rep(0.001, 4),
@@ -531,6 +531,25 @@ posterior_summary_old <- function(ln_prob_data, ln_prior_c, c_numerator, c_denom
   list(ln_post_c=ln_post_c, ln_post_odds=ln_post_odds, ln_prior_odds=ln_prior_odds)
 }
 
+#' Updated Bayesian mediation function 
+#'
+#' This function takes an outcome, mediator(s), and a driver as a design matrix to perform a Bayesian mediation analysis.
+#' It performs a simplified analysis compared to mediation_bf(), not fitting X -> M or X -> y.
+#'
+#' @param y Vector or single column matrix of an outcome variable. Single outcome variable expected. 
+#' Names or rownames must match across M and X, and Z and w (if provided).
+#' @param M Vector or matrix of mediator variables. Multiple mediator variables are supported. 
+#' Names or rownames must match across y and X, and Z and w (if provided).
+#' @param X Design matrix of the driver. Names or rownames must match across y and M, and Z and w (if provided).
+#' One common application is for X to represent genetic information at a QTL as either founder strain haplotypes
+#' in a multiparental population or variant genotypes, though it is generalizable to types of variables.
+#' @param Z DEFAULT: NULL. Design matrix of covariates that influence the outcome variable. Names or rownames must match across y, M and X, 
+#' and w (if provided).
+#' @param w DEFAULT: NULL. Vector of weights for individuals in analysis. Names or rownames must match across y, M X, and Z (if provided).
+#' A common use would be for an analysis of strain means, where w would be a vector of the number of individuals per strain.
+#' If no w is given, observations are equally weighted as 1.
+#' @export
+#' @examples mediation_bf_new()
 mediation_bf_new <- function(y, M, X, Z = NULL, w = NULL,
                          kappa = rep(0.001, 6),
                          lambda = rep(0.001, 6),
@@ -738,7 +757,7 @@ mediation_bf_new <- function(y, M, X, Z = NULL, w = NULL,
   output
 }
 
-model_info <- function(){
+model_info_old <- function(){
   writeLines(c("likelihood models for all hypotheses",
                "hypotheses encoded by presence or absence of 'X->y, X->m, m->y' edges on the DAG",
                "H1: '0,-,0' / y does not depend on X or m",

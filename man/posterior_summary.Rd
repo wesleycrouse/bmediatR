@@ -4,7 +4,7 @@
 \alias{posterior_summary}
 \title{Summaries of posterior model probabilities function}
 \usage{
-posterior_summary(ln_prob_data, ln_prior_c, c_numerator, c_denominator = NULL)
+posterior_summary(ln_prob_data, ln_prior_c, c_numerator)
 }
 \arguments{
 \item{ln_prob_data}{Log posterior likelihoods under the various models, returned by bmediatR().}
