@@ -2,21 +2,41 @@
 % Please edit documentation in R/pval_mediation_bf.R
 \name{get_perm_pval}
 \alias{get_perm_pval}
-\title{Function that calculate permutation-based p-values for Bayes factors}
+\title{Function that calculate permutation-based p-values for posterior odds}
 \usage{
 get_perm_pval(
   y,
   M,
   X,
   Z = NULL,
+  w = NULL,
+  model_type = c("mediation", "partial", "complete", "colocal"),
+  ln_prior_c = "complete",
   num_perm = 1000,
   verbose = FALSE,
-  bf_type = "lnBF_totmed",
   ...
 )
 }
+\arguments{
+\item{y}{Vector or single column matrix of an outcome variable. Single outcome variable expected. 
+Names or rownames must match across M and X, and Z and w (if provided).}
+
+\item{M}{Vector or matrix of mediator variables. Multiple mediator variables are supported. 
+Names or rownames must match across y and X, and Z and w (if provided).}
+
+\item{X}{Design matrix of the driver. Names or rownames must match across y and M, and Z and w (if provided).
+One common application is for X to represent genetic information at a QTL as either founder strain haplotypes
+in a multiparental population or variant genotypes, though it is generalizable to types of variables.}
+
+\item{Z}{DEFAULT: NULL. Design matrix of covariates that influence the outcome variable. Names or rownames must match across y, M and X, 
+and w (if provided).}
+
+\item{w}{DEFAULT: NULL. Vector of weights for individuals in analysis. Names or rownames must match across y, M X, and Z (if provided).
+A common use would be for an analysis of strain means, where w would be a vector of the number of individuals per strain.
+If no w is given, observations are equally weighted as 1.}
+}
 \description{
-This function takes Bayes factor results from mediation_bf() and calculates permutation p-values based
+This function takes posterior odds results from bmediatR() and calculates permutation p-values based
 on permuting the mediator.
 }
 \examples{

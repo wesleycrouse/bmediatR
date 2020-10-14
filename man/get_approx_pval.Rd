@@ -2,14 +2,27 @@
 % Please edit documentation in R/pval_mediation_bf.R
 \name{get_approx_pval}
 \alias{get_approx_pval}
-\title{Function that calculate approximate p-values for Bayes factors}
+\title{Function that calculate approximate p-values for posterior odds}
 \usage{
-get_approx_pval(med_bf_object, annot)
+get_approx_pval(
+  bmediatR_object,
+  model_type = c("mediation", "partial", "complete", "colocal"),
+  med_annot,
+  med_var = "protein.id"
+)
+}
+\arguments{
+\item{bmediatR_object}{Output from bmediatR().}
+
+\item{model_type}{DEFAULT: "mediation". Specifies which model(s)'s posterior probabilities are to be included in the numerator of the posterior odds and then displayed for
+for genome-wide mediators.}
+
+\item{med_annot}{Annotation data for -omic mediators.}
 }
 \description{
-This function takes Bayes factor results from mediation_bf() and calculates approximate p-values based
+This function takes posterior odds results from bmediatR() and calculates approximate p-values based
 on comparisons to genome results, using the assumption that the vast majority of candidates are not
-mediators and can thus be used to characterize a null distribution of Bayes factors.
+mediators and can thus be used to characterize a null distribution of posterior odds.
 }
 \examples{
 get_approx_pval()

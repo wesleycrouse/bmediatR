@@ -160,8 +160,8 @@ plot_posterior_odds <- function(bmediatR_object,
   
   model_type <- model_type[1]
   
-  post_odds <- matrix(med_object[["ln_post_odds"]][,model_type], ncol = 1)
-  rownames(post_odds) <- rownames(med_object[["ln_post_odds"]])
+  post_odds <- matrix(bmediatR_object[["ln_post_odds"]][,model_type], ncol = 1)
+  rownames(post_odds) <- rownames(bmediatR_object[["ln_post_odds"]])
   class(post_odds) <- "scan1"
   
   med_map_df <- med_annot %>%
