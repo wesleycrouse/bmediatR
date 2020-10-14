@@ -36,185 +36,51 @@ map_df_to_list <- function (map, chr_column = "chr", pos_column = "cM", marker_c
   result
 }
 
-#' Bayes factor genome plot function
-#'
-#' This function takes Bayes factor results from mediation_bf() and plots the genome-wide mediation scan.
-#'
-#' @param med_bf_object Output from mediation_bf(). 
-#' @param bf_type DEFAULT: "lnBF_med". Bayes factor to be displayed. 
-#' @param med_annot Annotation data for -omic mediators.
-#' @param include_chr DEFAULT: c(1:19, "X"). Chromosomes to include in plot.
-#' @param expland_lim_factor DEFAULT: 0.025. Scale to increase plot limits by.
-#' @param label_thresh DEFAULT: NULL. Label mediators that surpass label_thresh. Default does not add labels.
-#' @param qtl_dat DEFAULT: NULL. QTL data that includes position of QTL and outcome. Adds ticks to the figure.
-#' @export
-#' @examples plot_bf()
-plot_bf <- function(med_bf_object, 
-                    bf_type = "lnBF_med",
-                    med_annot, 
-                    med_var = "protein.id",
-                    include_chr = c(1:19, "X"), 
-                    expand_lim_factor = 0.025, 
-                    label_thresh = NULL, 
-                    bgcol = "white", altcol = "gray", altbgcol = "white", hlines_col = "gray80", col = "black", cex = 0.75,
-                    qtl_dat = NULL,
-                    outcome_symbol = NULL,
-                    ...) {
-  
-  bf_type <- bf_type[1]
-  
-  bf <- matrix(med_bf_object[[bf_type]], ncol = 1)
-  rownames(bf) <- names(med_bf_object[[bf_type]])
-  class(bf) <- "scan1"
-  
-  med_map_df <- med_annot %>%
-    dplyr::select(tidyselect::all_of(med_var), symbol, chr, middle) %>%
-    dplyr::filter(chr %in% include_chr) %>%
-    dplyr::mutate(chr = factor(chr, levels = c(1:19, "X"))) %>%
-    as.data.frame %>% 
-    dplyr::arrange(chr)
-  if (!is.null(qtl_dat)) {
-    ## Add QTL to map for plotting
-    med_map_df <- dplyr::bind_rows(med_map_df,
-                                   qtl_dat %>%
-                                     dplyr::mutate((!!as.symbol(med_var)) := "QTL",
-                                                   symbol = "QTL") %>%
-                                     dplyr::rename(middle = pos) %>%
-                                     dplyr::select(tidyselect::all_of(med_var), symbol, chr, middle))
-  }
-  med_map <- map_df_to_list(map = med_map_df, marker_column = med_var, pos_column = "middle")
-  
-  gap <- sum(qtl2::chr_lengths(map))/100
-  
-  lim_shift <- (max(bf[,1]) - min(bf[,1])) * expand_lim_factor
-  qtl2:::plot.scan1(bf, map = med_map, ylab = "Log Bayes factor", type = "p", pch = 20, ylim = c(min(bf[,1]) - lim_shift, max(bf[,1]) + lim_shift),
-       bgcol = bgcol, altcol = altcol, altbgcol = altbgcol, hlines_col = hlines_col, col = col, cex = cex, gap = gap,
-       ...)
-  
-  xpos <- qtl2:::map_to_xpos(map = med_map, gap = gap)
-  
-  if (!is.null(label_thresh) & any(bf > label_thresh)) {
-    labels <- rownames(bf)[bf > label_thresh]
-    
-    label_map_df <- med_map_df %>%
-      filter((!!as.symbol(med_var)) %in% labels) 
-    
-    for (i in 1:nrow(label_map_df)) {
-      lab_pos <- xpos[label_map_df[i, med_var]]
-      lab_bf <- bf[label_map_df[i, med_var],]
-      
-      text(x = lab_pos, y = lab_bf, label_map_df$symbol[i], font = 3)
-    }
-  }
-  if (!is.null(outcome_symbol)) {
-    rug(x = xpos[med_annot %>% 
-                   dplyr::filter(symbol == outcome_symbol) %>% 
-                   pull(tidyselect::all_of(med_var))],
-        lwd = 3,
-        col = "black")
-  }
-  if (!is.null(qtl_dat)) {
-    rug(x = xpos["QTL"],
-        lwd = 3,
-        col = "red")
-  }
-}
-
-#' Posterior probability genome plot function
-#'
-#' This function takes posterior probability results from mediation_bf() and plots the genome-wide mediation scan.
-#'
-#' @export
-#' @examples plot_posterior()
-plot_posterior <- function(med_bf_object, 
-                           post_col = c(4, 8),
-                           med_annot, 
-                           med_var = "protein.id",
-                           include_chr = c(1:19, "X"), 
-                           expand_lim_factor = 0.025, 
-                           label_thresh = NULL, 
-                           bgcol = "white", altcol = "gray", altbgcol = "white", hlines_col = "gray80", col = "black", cex = 0.75,
-                           qtl_dat = NULL,
-                           outcome_symbol = NULL,
-                           ...) {
-  
-  post_p <- matrix(apply(exp(med_bf_object$ln_post_c[,c(4,8)]), 1, function(x) sum(x)), ncol = 1)
-  rownames(post_p) <- rownames(med_bf_object$ln_post_c)
-  class(post_p) <- "scan1"
-  
-  med_map_df <- med_annot %>%
-    dplyr::select(tidyselect::all_of(med_var), symbol, chr, middle) %>%
-    dplyr::filter(chr %in% include_chr) %>%
-    dplyr::mutate(chr = factor(chr, levels = c(1:19, "X"))) %>%
-    as.data.frame %>% 
-    dplyr::arrange(chr)
-  if (!is.null(qtl_dat)) {
-    ## Add QTL to map for plotting
-    med_map_df <- dplyr::bind_rows(med_map_df,
-                                   qtl_dat %>%
-                                     dplyr::mutate((!!as.symbol(med_var)) := "QTL",
-                                                   symbol = "QTL") %>%
-                                     dplyr::rename(middle = pos) %>%
-                                     dplyr::select(tidyselect::all_of(med_var), symbol, chr, middle)) 
-  }
-  med_map <- map_df_to_list(map = med_map_df, marker_column = med_var, pos_column = "middle")
-  
-  gap <- sum(qtl2::chr_lengths(map))/100
-  
-  lim_shift <- (max(post_p[,1]) - min(post_p[,1])) * expand_lim_factor
-  qtl2:::plot.scan1(post_p, map = med_map, ylab = "Posterior Probability", type = "p", pch = 20, ylim = c(min(post_p[,1]) - lim_shift, max(post_p) + lim_shift),
-                    bgcol = bgcol, altcol = altcol, altbgcol = altbgcol, hlines_col = hlines_col, col = col, cex = cex, gap = gap,
-                    ...)
-  
-  xpos <- qtl2:::map_to_xpos(map = med_map, gap = gap)
-  
-  if (!is.null(label_thresh) & any(post_p > label_thresh)) {
-    labels <- rownames(post_p)[post_p > label_thresh]
-    
-    label_map_df <- med_map_df %>%
-      filter((!!as.symbol(med_var)) %in% labels) 
-    
-    for (i in 1:nrow(label_map_df)) {
-      lab_pos <- xpos[label_map_df[i, med_var]]
-      lab_post_p <- post_p[label_map_df[i, med_var],]
-      
-      text(x = lab_pos, y = lab_post_p, label_map_df$symbol[i], font = 3)
-    }
-  }
-  if (!is.null(outcome_symbol)) {
-    rug(x = xpos[med_annot %>% 
-                   dplyr::filter(symbol == outcome_symbol) %>% 
-                   pull(tidyselect::all_of(med_var))],
-        lwd = 3,
-        col = "black")
-  }
-  if (!is.null(qtl_dat)) {
-    rug(x = xpos["QTL"],
-        lwd = 3,
-        col = "red")
-  }
-}
-
 #' Barplot of posterior model probabilities function
 #'
 #' This function takes posterior probability results from mediation_bf() and plots barplots of posterior model probabilities.
 #'
+#' @param bmediatR_object Output from bmediatR(). 
+#' @param med_annot Annotation data for -omic mediators.
+#' @param mediator_id Which mediator to plot posterior model probabilities for.
+#' @param med_var DEFAULT: "protein.id". The column in med_annot to be used as a mediator id.
+#' @param stack DEFAULT: FALSE. If TRUE, a stacked barplot is produced. If FALSE, a staggered
+#' barplot is produced.
+#'
 #' @export
 #' @examples plot_posterior_bar()
-plot_posterior_bar <- function(med_bf_object,
+plot_posterior_bar <- function(bmediatR_object,
                                med_annot = NULL,
                                mediator_id,
                                med_var = "protein.id",
                                stack = FALSE) {
-
-  posterior_dat <- med_bf_object$ln_post_c %>%
-    as.data.frame %>%
-    rownames_to_column(med_var) %>% 
-    mutate("partial mediator" = exp(V4),
-           "full mediator" = exp(V8),
-           "co-local" = exp(V3))
   
-  ## Using annotation information
+  ## Flag for reactive model
+  prior_mat <- bmediatR_object$ln_prior_c
+  model_flag <- is.finite(prior_mat)
+  names(model_flag) <- colnames(prior_mat)
+  
+  ## Long names
+  long_names <- c("other non-med", "other non-med", "other non-med", 
+                  "complete med", "other non-med", "other non-med",
+                  "co-local", "partial med", "other non-med",
+                  "complete med (react)", "other non-med", "partial med (react)")
+  names(long_names) <- colnames(prior_mat)
+  
+
+  bar_col <- c("seagreen4", "seagreen1", "skyblue", "firebrick1", "firebrick4", "gray")
+  bar_col <- bar_col[c(model_flag[c("0,1,1", "1,1,1", "1,1,0", "1,1,*", "1,0,*")], TRUE)]
+
+  posterior_dat <- exp(bmediatR_object$ln_post_c) %>%
+    as.data.frame %>%
+    rownames_to_column(med_var) %>%
+    dplyr::rename("partial med" = `1,1,1`,
+                  "complete med" = `0,1,1`,
+                  "co-local" = `1,1,0`,
+                  "partial med (react)" = `1,1,*`,
+                  "complete med (react)" = `1,0,*`)
+
+  # Using annotation information
   if (!is.null(med_annot)) {
     posterior_dat <- posterior_dat %>%
       left_join(med_annot %>%
@@ -223,13 +89,20 @@ plot_posterior_bar <- function(med_bf_object,
     posterior_dat <- posterior_dat %>%
       mutate(symbol = get(med_var))
   }
+  
+  ## Calculating non-mediation or co-local probability
   posterior_dat <- posterior_dat %>%
     left_join(posterior_dat %>%
-                group_by_at(dplyr::vars(tidyselect::all_of(med_var))) %>%
-                summarize("other non-mediator" = sum(exp(V1), exp(V2), exp(V5), exp(V6), exp(V7)))) %>%
-    dplyr::select(-contains("V")) %>%
-    gather(key = model, value = post_p, -c(tidyselect::all_of(med_var), symbol)) %>%
-    mutate(model = factor(model, levels = c("full mediator", "partial mediator", "co-local", "other non-mediator")))
+                dplyr::select(tidyselect::all_of(med_var), contains(",")) %>%
+                mutate("other non-med" = rowSums(.[-1]))) %>%
+    dplyr::select(-contains(",")) %>%
+    gather(key = model, value = post_p, -c(tidyselect::all_of(med_var), symbol))
+
+  ## Set factors
+  models_use <- unique(long_names[model_flag])
+  posterior_dat <- posterior_dat %>%
+    filter(model %in% models_use) %>%
+    mutate(model = factor(model, levels = c("complete med", "partial med", "co-local", "partial med (react)", "complete med (react)", "other non-med")))
   
   bar_theme <- theme(panel.grid.major = element_blank(), 
                      panel.grid.minor = element_blank(),
@@ -246,7 +119,7 @@ plot_posterior_bar <- function(med_bf_object,
   
   p <- ggplot(data = posterior_dat %>% 
                 filter((!!as.symbol(med_var)) == mediator_id)) +
-    scale_fill_manual(values = c("seagreen4", "seagreen1", "skyblue", "gray")) +
+    scale_fill_manual(values = bar_col) +
     ylab("Posterior model probability") + bar_theme
   if (stack) {
     p <- p + geom_col(aes(x = symbol, y = post_p, fill = model), width = 0.5) 
@@ -258,8 +131,21 @@ plot_posterior_bar <- function(med_bf_object,
   p
 }
 
-## Plotting posterior odds for the updated mediation function
-plot_posterior_odds <- function(med_object, 
+#' Posterior odds genome plot function
+#'
+#' This function takes the posterior odds results from bmediatR() and plots the genome-wide scan.
+#'
+#' @param bmediatR_object Output from bmediatR(). 
+#' @param model_type DEFAULT: "mediation". Specifies which model(s)'s posterior probabilities are to be included in the numerator of the posterior odds and then displayed for
+#' for genome-wide mediators. 
+#' @param med_annot Annotation data for -omic mediators.
+#' @param include_chr DEFAULT: c(1:19, "X"). Chromosomes to include in plot.
+#' @param expland_lim_factor DEFAULT: 0.025. Scale to increase plot limits by.
+#' @param label_thresh DEFAULT: NULL. Label mediators that surpass label_thresh. Default does not add labels.
+#' @param qtl_dat DEFAULT: NULL. QTL data that includes position of QTL and outcome. Adds ticks to the figure.
+#' @export
+#' @examples plot_posterior_odds()
+plot_posterior_odds <- function(bmediatR_object, 
                                 model_type = c("mediation", "partial", "complete", "colocal"),
                                 med_annot, 
                                 med_var = "protein.id",
