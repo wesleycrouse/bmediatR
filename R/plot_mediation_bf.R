@@ -68,7 +68,7 @@ plot_posterior_bar <- function(bmediatR_object,
   names(long_names) <- colnames(prior_mat)
   
 
-  bar_col <- c("seagreen4", "seagreen1", "skyblue", "firebrick1", "firebrick4", "gray")
+  bar_col <- c("seagreen4", "seagreen1", "skyblue", "goldenrod1", "goldenrod4", "gray")
   bar_col <- bar_col[c(model_flag[c("0,1,1", "1,1,1", "1,1,0", "1,1,*", "1,0,*")], TRUE)]
 
   posterior_dat <- exp(bmediatR_object$ln_post_c) %>%
