@@ -53,7 +53,9 @@ plot_posterior_bar <- function(bmediatR_object,
                                med_annot = NULL,
                                mediator_id,
                                med_var = "protein.id",
-                               stack = FALSE) {
+                               stack = FALSE,
+                               bar_col = c("seagreen4", "seagreen1", "skyblue", "goldenrod1", "goldenrod4", "gray"),
+                               relabel_x = NULL) {
   
   ## Flag for reactive model
   prior_mat <- bmediatR_object$ln_prior_c
@@ -68,7 +70,6 @@ plot_posterior_bar <- function(bmediatR_object,
   names(long_names) <- colnames(prior_mat)
   
 
-  bar_col <- c("seagreen4", "seagreen1", "skyblue", "goldenrod1", "goldenrod4", "gray")
   bar_col <- bar_col[c(model_flag[c("0,1,1", "1,1,1", "1,1,0", "1,1,*", "1,0,*")], TRUE)]
 
   posterior_dat <- exp(bmediatR_object$ln_post_c) %>%
@@ -117,6 +118,10 @@ plot_posterior_bar <- function(bmediatR_object,
                      legend.title = element_text(size = 14),
                      legend.text = element_text(size = 14))
   
+  if (!is.null(relabel_x)) {
+    posterior_dat$symbol <- relabel_x
+  }
+  
   p <- ggplot(data = posterior_dat %>% 
                 filter((!!as.symbol(med_var)) == mediator_id)) +
     scale_fill_manual(values = bar_col) +
@@ -127,7 +132,7 @@ plot_posterior_bar <- function(bmediatR_object,
     p <- p + geom_bar(aes(x = symbol, y = post_p, fill = model), position = "dodge", stat = "summary", fun = "mean") +
       geom_hline(yintercept = c(0, 1), col = "gray", linetype = "dashed")
   }
-
+  
   p
 }
 

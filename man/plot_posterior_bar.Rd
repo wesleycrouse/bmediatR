@@ -9,7 +9,9 @@ plot_posterior_bar(
   med_annot = NULL,
   mediator_id,
   med_var = "protein.id",
-  stack = FALSE
+  stack = FALSE,
+  bar_col = c("seagreen4", "seagreen1", "skyblue", "goldenrod1", "goldenrod4", "gray"),
+  relabel_x = NULL
 )
 }
 \arguments{
