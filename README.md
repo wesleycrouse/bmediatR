@@ -7,6 +7,7 @@ A Bayesian model selection approach to mediation analysis.
 The following code services as a simple vignette for using the package.
 
 ``` r
+devtools::install_github("wesleycrouse/bmediatR")
 library(bmediatR)
 
 ## Simulate Collaborative Cross data
