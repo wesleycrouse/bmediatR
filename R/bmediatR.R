@@ -1,3 +1,12 @@
+#' Sum-to-zero contrast matrix
+#'
+#' This function takes the dimensions of a design matrix to produce a sum-to-zero contrast matrix, which is post-multiplied
+#' by the design matrix, reducing its dimension by one, resulting in a parameterization of the model in terms of deviation
+#' from mean (of a balanced data set). 
+#'
+#' @param k Number of columns of the design matrix.
+#' @export
+#' @examples sumtozero_contrast()
 sumtozero_contrast <- function(k) {
   u <- 1/((k-1)^(0.5))
   v <- (-1+(k^(0.5)))*((k-1)^(-1.5))
