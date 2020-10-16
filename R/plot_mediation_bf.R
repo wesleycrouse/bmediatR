@@ -88,7 +88,7 @@ plot_posterior_bar <- function(bmediatR_object,
                          dplyr::select(tidyselect::all_of(med_var), symbol))
   } else {
     posterior_dat <- posterior_dat %>%
-      mutate(symbol = get(med_var))
+      dplyr::mutate(symbol = get(med_var))
   }
   
   ## Calculating non-mediation or co-local probability
