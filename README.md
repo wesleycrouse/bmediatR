@@ -1,6 +1,6 @@
 # bmediatR
 
-A Bayesian model selection approach to mediation analysis. 
+A Bayesian model selection approach for mediation analysis. 
 
 ## Example
 
