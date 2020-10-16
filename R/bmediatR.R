@@ -448,7 +448,7 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
   colnames(output$ln_prior_c) <- colnames(output$ln_post_c)
     
   output$ln_prob_data <- ln_prob_data
-  output <- output[c(5,1,2,4,2,3)]
+  output <- output[c(5,1,2,4,3)]
   
   if (verbose) {print("Done", quote=F)}
   output
