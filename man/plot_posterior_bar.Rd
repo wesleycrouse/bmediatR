@@ -12,7 +12,7 @@ plot_posterior_bar(
   stack = FALSE,
   bar_col = c("seagreen4", "seagreen1", "skyblue", "goldenrod1", "goldenrod4", "gray"),
   relabel_x = NULL,
-  main = ""
+  main = NULL
 )
 }
 \arguments{

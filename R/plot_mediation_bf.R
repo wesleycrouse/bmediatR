@@ -56,7 +56,7 @@ plot_posterior_bar <- function(bmediatR_object,
                                stack = FALSE,
                                bar_col = c("seagreen4", "seagreen1", "skyblue", "goldenrod1", "goldenrod4", "gray"),
                                relabel_x = NULL,
-                               main = "") {
+                               main = NULL) {
   
   ## Flag for reactive model
   prior_mat <- bmediatR_object$ln_prior_c
@@ -127,8 +127,10 @@ plot_posterior_bar <- function(bmediatR_object,
                          dplyr::filter((!!as.symbol(med_var)) == mediator_id)) +
     ggplot2::scale_fill_manual(values = bar_col) +
     ggplot2::ylab("Posterior model probability") + 
-    bar_theme + 
-    ggplot2::ggtitle(main)
+    bar_theme
+  if (!is.null(main)) {
+    p <- p + ggplot2::ggtitle(main)
+  }
   if (stack) {
     p <- p + ggplot2::geom_col(ggplot2::aes(x = symbol, y = post_p, fill = model), width = 0.5) 
   } else {
