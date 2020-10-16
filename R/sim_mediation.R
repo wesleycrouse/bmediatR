@@ -299,6 +299,7 @@ sim_cc_qtl <- function(locus_matrix,
       tidyr::gather(key = "sim", value = "phenotype", -strain) %>%
       dplyr::group_by(strain, sim) %>%
       dplyr::summarize(phenotype = mean(phenotype)) %>%
+      as.data.frame %>%
       dplyr::ungroup %>%
       tidyr::spread(key = "sim", value = "phenotype") %>%
       tibble::column_to_rownames("strain") %>%
