@@ -8,7 +8,6 @@ The following code services as a simple vignette for using the package.
 
 ``` r
 library(bmediatR)
-library(ggplo2)
 
 ## Simulate Collaborative Cross data
 # Balanced design matrix with 20 observations of each founder allele
