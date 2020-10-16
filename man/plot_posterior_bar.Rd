@@ -11,7 +11,8 @@ plot_posterior_bar(
   med_var = "protein.id",
   stack = FALSE,
   bar_col = c("seagreen4", "seagreen1", "skyblue", "goldenrod1", "goldenrod4", "gray"),
-  relabel_x = NULL
+  relabel_x = NULL,
+  main = ""
 )
 }
 \arguments{

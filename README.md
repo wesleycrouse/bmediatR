@@ -8,6 +8,7 @@ The following code services as a simple vignette for using the package.
 
 ``` r
 library(bmediatR)
+library(ggplo2)
 
 ## Simulate Collaborative Cross data
 # Balanced design matrix with 20 observations of each founder allele
@@ -56,6 +57,6 @@ null_med <- bmediatR(y = simple_y[,1],
                      ln_prior_c = "reactive")
 
 ## Plot posterior probabilities
-plot_posterior_bar(true_med, mediator_id = "sim_m_1", relabel_x = "simulated m") + ggtitle("Mediation through M")
-plot_posterior_bar(null_med, mediator_id = "sim_m_null_1", relabel_x = "simulated null m") + ggtitle("Mediation through null M")
+plot_posterior_bar(true_med, mediator_id = "sim_m_1", relabel_x = "simulated m", main = "Mediation through M")
+plot_posterior_bar(null_med, mediator_id = "sim_m_null_1", relabel_x = "simulated null m", main = "Mediation through null M")
 ```
