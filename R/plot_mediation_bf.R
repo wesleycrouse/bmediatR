@@ -105,32 +105,32 @@ plot_posterior_bar <- function(bmediatR_object,
     dplyr::filter(model %in% models_use) %>%
     dplyr::mutate(model = factor(model, levels = c("complete med", "partial med", "co-local", "partial med (react)", "complete med (react)", "other non-med")))
   
-  bar_theme <- theme(panel.grid.major = element_blank(), 
-                     panel.grid.minor = element_blank(),
-                     panel.background = element_blank(), 
-                     axis.line = element_line(colour = "black"),
-                     plot.title = element_text(hjust = 0.5, size = 16, face = "plain"), 
-                     axis.title.x = element_blank(),
-                     axis.text.x = element_text(hjust = 0.5, size = 14, face = "plain"),
-                     axis.title.y = element_text(size = 14, face = "plain"),
-                     axis.text.y = element_text(size = 14, face = "plain"),
-                     axis.ticks.y = element_blank(),
-                     legend.title = element_text(size = 14),
-                     legend.text = element_text(size = 14))
+  bar_theme <- ggplot2::theme(panel.grid.major = ggplot2::element_blank(), 
+                              panel.grid.minor = ggplot2::element_blank(),
+                              panel.background = ggplot2::element_blank(), 
+                              axis.line = ggplot2::element_line(colour = "black"),
+                              plot.title = ggplot2::element_text(hjust = 0.5, size = 16, face = "plain"), 
+                              axis.title.x = ggplot2::element_blank(),
+                              axis.text.x = ggplot2::element_text(hjust = 0.5, size = 14, face = "plain"),
+                              axis.title.y = ggplot2::element_text(size = 14, face = "plain"),
+                              axis.text.y = ggplot2::element_text(size = 14, face = "plain"),
+                              axis.ticks.y = ggplot2::element_blank(),
+                              legend.title = ggplot2::element_text(size = 14),
+                              legend.text = ggplot2::element_text(size = 14))
   
   if (!is.null(relabel_x)) {
     posterior_dat$symbol <- relabel_x
   }
   
-  p <- ggplot(data = posterior_dat %>% 
-                dplyr::filter((!!as.symbol(med_var)) == mediator_id)) +
-    scale_fill_manual(values = bar_col) +
-    ylab("Posterior model probability") + bar_theme
+  p <- ggplot2::ggplot(data = posterior_dat %>% 
+                         dplyr::filter((!!as.symbol(med_var)) == mediator_id)) +
+    ggplot2::scale_fill_manual(values = bar_col) +
+    ggplot2::ylab("Posterior model probability") + bar_theme
   if (stack) {
-    p <- p + geom_col(aes(x = symbol, y = post_p, fill = model), width = 0.5) 
+    p <- p + ggplot2::geom_col(ggplot2::aes(x = symbol, y = post_p, fill = model), width = 0.5) 
   } else {
-    p <- p + geom_bar(aes(x = symbol, y = post_p, fill = model), position = "dodge", stat = "summary", fun = "mean") +
-      geom_hline(yintercept = c(0, 1), col = "gray", linetype = "dashed")
+    p <- p + ggplot2::geom_bar(ggplot2::aes(x = symbol, y = post_p, fill = model), position = "dodge", stat = "summary", fun = "mean") +
+      ggplot2::geom_hline(yintercept = c(0, 1), col = "gray", linetype = "dashed")
   }
   
   p
