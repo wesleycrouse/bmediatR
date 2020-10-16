@@ -123,7 +123,7 @@ plot_posterior_bar <- function(bmediatR_object,
   }
   
   p <- ggplot(data = posterior_dat %>% 
-                filter((!!as.symbol(med_var)) == mediator_id)) +
+                dplyr::filter((!!as.symbol(med_var)) == mediator_id)) +
     scale_fill_manual(values = bar_col) +
     ylab("Posterior model probability") + bar_theme
   if (stack) {
