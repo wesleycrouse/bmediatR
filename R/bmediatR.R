@@ -430,8 +430,8 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
   #c11: '1,0,*' / H3 and H7
   #c12: '1,1,*' / H3 and H8
   
-  output <- posterior_summary(ln_prob_data, ln_prior_c, list(c(4,8),8,4,7))
-  colnames(output$ln_post_odds) <- c("mediation", "partial", "complete", "colocal")
+  output <- posterior_summary(ln_prob_data, ln_prior_c, list(c(4,8),8,4,7,c(4:8,11,12)))
+  colnames(output$ln_post_odds) <- c("mediation", "partial", "complete", "colocal", "y_depends_x")
   colnames(output$ln_prior_odds) <- colnames(output$ln_post_odds)
   
   #return results
