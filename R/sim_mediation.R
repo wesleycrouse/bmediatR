@@ -296,12 +296,12 @@ sim_cc_qtl <- function(locus_matrix,
   
   if (return_means) {
     sim_data <- data.frame(strain = rep(strains, each = num_replicates), sim_data) %>%
-      gather(key = "sim", value = "phenotype", -strain) %>%
-      group_by(strain, sim) %>%
-      summarize(phenotype = mean(phenotype)) %>%
-      ungroup %>%
-      spread(key = "sim", value = "phenotype") %>%
-      column_to_rownames("strain") %>%
+      tidyr::gather(key = "sim", value = "phenotype", -strain) %>%
+      dplyr::group_by(strain, sim) %>%
+      dplyr::summarize(phenotype = mean(phenotype)) %>%
+      dplyr::ungroup %>%
+      tidyr::spread(key = "sim", value = "phenotype") %>%
+      tibble::column_to_rownames("strain") %>%
       as.matrix
   }
   return(list(data = sim_data,

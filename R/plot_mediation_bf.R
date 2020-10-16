@@ -74,7 +74,7 @@ plot_posterior_bar <- function(bmediatR_object,
 
   posterior_dat <- exp(bmediatR_object$ln_post_c) %>%
     as.data.frame %>%
-    rownames_to_column(med_var) %>%
+    tibble::rownames_to_column(med_var) %>%
     dplyr::rename("partial med" = `1,1,1`,
                   "complete med" = `0,1,1`,
                   "co-local" = `1,1,0`,
@@ -84,8 +84,8 @@ plot_posterior_bar <- function(bmediatR_object,
   # Using annotation information
   if (!is.null(med_annot)) {
     posterior_dat <- posterior_dat %>%
-      left_join(med_annot %>%
-                  dplyr::select(tidyselect::all_of(med_var), symbol))
+      dplyr::left_join(med_annot %>%
+                         dplyr::select(tidyselect::all_of(med_var), symbol))
   } else {
     posterior_dat <- posterior_dat %>%
       mutate(symbol = get(med_var))
@@ -93,17 +93,17 @@ plot_posterior_bar <- function(bmediatR_object,
   
   ## Calculating non-mediation or co-local probability
   posterior_dat <- posterior_dat %>%
-    left_join(posterior_dat %>%
-                dplyr::select(tidyselect::all_of(med_var), contains(",")) %>%
-                mutate("other non-med" = rowSums(.[-1]))) %>%
+    dplyr::left_join(posterior_dat %>%
+                       dplyr::select(tidyselect::all_of(med_var), contains(",")) %>%
+                       dplyr::mutate("other non-med" = rowSums(.[-1]))) %>%
     dplyr::select(-contains(",")) %>%
-    gather(key = model, value = post_p, -c(tidyselect::all_of(med_var), symbol))
+    tidyr::gather(key = model, value = post_p, -c(tidyselect::all_of(med_var), symbol))
 
   ## Set factors
   models_use <- unique(long_names[model_flag])
   posterior_dat <- posterior_dat %>%
-    filter(model %in% models_use) %>%
-    mutate(model = factor(model, levels = c("complete med", "partial med", "co-local", "partial med (react)", "complete med (react)", "other non-med")))
+    dplyr::filter(model %in% models_use) %>%
+    dplyr::mutate(model = factor(model, levels = c("complete med", "partial med", "co-local", "partial med (react)", "complete med (react)", "other non-med")))
   
   bar_theme <- theme(panel.grid.major = element_blank(), 
                      panel.grid.minor = element_blank(),
