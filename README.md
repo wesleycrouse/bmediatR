@@ -48,11 +48,11 @@ simple_m_null <- sim_cc_single_locus(locus_matrix = balanced_matrix,
 ## Run mediation analysis
 true_med <- bmediatR(y = simple_y[,1], 
                      M = cbind(simple_m$data[,1, drop = FALSE], simple_m_null$data[,1, drop = FALSE]), 
-                     X = M_single_X,
+                     X = SNP_X,
                      ln_prior_c = "reactive")
 null_med <- bmediatR(y = simple_y[,1], 
                      M = cbind(simple_m$data[,1, drop = FALSE], simple_m_null$data[,1, drop = FALSE]), 
-                     X = M_single_X,
+                     X = SNP_X,
                      ln_prior_c = "reactive")
 
 ## Plot posterior probabilities
