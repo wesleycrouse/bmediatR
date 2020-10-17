@@ -193,10 +193,8 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
                      verbose = T) {
   if(verbose){print("Initializing", quote=F)}
   
-  #dimensions
+  #dimension of y
   n <- length(y)
-  d <- ncol(X)
-  p <- ncol(Z)
   
   #presets for ln_prior_c; 
   if (ln_prior_c=="complete"){
@@ -216,7 +214,10 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
   
   #default values for w and Z
   if (is.null(w)){w <- rep(1, n)}
-  if (is.null(Z)){Z <- matrix(NA, n, 0); p <- 0}
+  if (is.null(Z)){Z <- matrix(NA, n, 0)}
+  
+  #dimension of Z
+  p <- ncol(Z)
   
   #ensure X, M, and Z are matrices
   X <- as.matrix(X)
@@ -245,11 +246,13 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
   if (options_X$sum_to_zero==T){
     C <- sumtozero_contrast(ncol(X))
     X <- X%*%C
-    d <- ncol(X)
   }
   
   #optionally center and scale X
   X <- apply(X, 2, scale, center=options_X$center, scale=options_X$scale)
+  
+  #dimension of X
+  d <- ncol(X)
   
   #column design matrix for mu
   ones <- matrix(1, n)
@@ -439,8 +442,8 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
   #c11: '1,0,*' / H3 and H7
   #c12: '1,1,*' / H3 and H8
   
-  output <- posterior_summary(ln_prob_data, ln_prior_c, list(c(4,8), 8, 4, 7, 9:12, c(4:8,11,12)))
-  colnames(output$ln_post_odds) <- c("mediation", "partial", "complete", "colocal", "reactive", "y_depends_x")
+  output <- posterior_summary(ln_prob_data, ln_prior_c, list(c(4,8), 8, 4, 7, c(4:8,11,12), 9:12))
+  colnames(output$ln_post_odds) <- c("mediation", "partial", "complete", "colocal", "y_depends_x", "reactive")
   colnames(output$ln_prior_odds) <- colnames(output$ln_post_odds)
   
   #return results
