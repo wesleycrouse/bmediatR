@@ -131,7 +131,10 @@ posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator){
                      ln_prob_data[,1] + ln_prob_data[,8] + ln_prior_c[,10],
                      ln_prob_data[,3] + ln_prob_data[,7] + ln_prior_c[,11],
                      ln_prob_data[,3] + ln_prob_data[,8] + ln_prior_c[,12])
-  ln_post_c <- ln_post_c - apply(ln_post_c, 1, matrixStats::logSumExp)
+  
+  ln_ml <- apply(ln_post_c, 1, matrixStats::logSumExp)
+  ln_post_c <- ln_post_c - ln_ml
+  
   colnames(ln_post_c) <- c("0,0,0",
                            "0,0,1",
                            "0,1,0",
@@ -159,7 +162,7 @@ posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator){
   colnames(ln_post_odds) <- c_numerator
   
   #return results
-  list(ln_post_c=ln_post_c, ln_post_odds=ln_post_odds, ln_prior_odds=ln_prior_odds)
+  list(ln_post_c=ln_post_c, ln_post_odds=ln_post_odds, ln_prior_odds=ln_prior_odds, ln_ml=ln_ml)
 }
 
 #' Bayesian model selection for mediation analysis function 
@@ -451,7 +454,7 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
   colnames(output$ln_prior_c) <- colnames(output$ln_post_c)
     
   output$ln_prob_data <- ln_prob_data
-  output <- output[c(5,1,2,4,3)]
+  output <- output[c("ln_prob_data", "ln_post_c", "ln_post_odds", "ln_prior_c", "ln_prior_odds", "ln_ml")]
   
   if (verbose) {print("Done", quote=F)}
   output
