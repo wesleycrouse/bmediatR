@@ -495,3 +495,63 @@ model_info <- function(){
                "c11: '1,0,*' / H3 and H7",
                "c12: '1,1,*' / H3 and H8"))
 }
+
+empirical_prior_complete <- function(ln_prob_data){
+  marginal_likelihood <- function(x){
+    x <- -log(1+exp(-x))
+    
+    ln_prior_c <- rep(-Inf, 12)
+    ln_prior_c[1] <- VGAM::log1mexp(-x[1]) + VGAM::log1mexp(-x[2]) + VGAM::log1mexp(-x[3])
+    ln_prior_c[2] <- VGAM::log1mexp(-x[1]) + VGAM::log1mexp(-x[2]) + x[3]
+    ln_prior_c[3] <- VGAM::log1mexp(-x[1]) + x[2] + VGAM::log1mexp(-x[3])
+    ln_prior_c[4] <- VGAM::log1mexp(-x[1]) + x[2] + x[3]
+    ln_prior_c[5] <- x[1] + VGAM::log1mexp(-x[2]) + VGAM::log1mexp(-x[3])
+    ln_prior_c[6] <- x[1] + VGAM::log1mexp(-x[2]) + x[3]
+    ln_prior_c[7] <- x[1] + x[2] + VGAM::log1mexp(-x[3])
+    ln_prior_c[8] <- x[1] + x[2] + x[3]
+    
+    -sum(posterior_summary(ln_prob_data, ln_prior_c, list(1))$ln_ml)
+  }
+  
+  empirical_prior <- optim(c(0,0,0), marginal_likelihood)
+  
+  x <- -log(1+exp(-empirical_prior$par))
+  
+  ln_prior_c <- rep(-Inf, 12)
+  ln_prior_c[1] <- VGAM::log1mexp(-x[1]) + VGAM::log1mexp(-x[2]) + VGAM::log1mexp(-x[3])
+  ln_prior_c[2] <- VGAM::log1mexp(-x[1]) + VGAM::log1mexp(-x[2]) + x[3]
+  ln_prior_c[3] <- VGAM::log1mexp(-x[1]) + x[2] + VGAM::log1mexp(-x[3])
+  ln_prior_c[4] <- VGAM::log1mexp(-x[1]) + x[2] + x[3]
+  ln_prior_c[5] <- x[1] + VGAM::log1mexp(-x[2]) + VGAM::log1mexp(-x[3])
+  ln_prior_c[6] <- x[1] + VGAM::log1mexp(-x[2]) + x[3]
+  ln_prior_c[7] <- x[1] + x[2] + VGAM::log1mexp(-x[3])
+  ln_prior_c[8] <- x[1] + x[2] + x[3]
+  
+  ln_prior_c
+}
+
+empirical_prior_partial <- function(ln_prob_data){
+  marginal_likelihood <- function(x){
+    x <- -log(1+exp(-x))
+    
+    ln_prior_c <- rep(-Inf, 12)
+    ln_prior_c[5] <- VGAM::log1mexp(-x[1]) + VGAM::log1mexp(-x[2])
+    ln_prior_c[6] <- VGAM::log1mexp(-x[1]) + x[2]
+    ln_prior_c[7] <- x[1] + VGAM::log1mexp(-x[2])
+    ln_prior_c[8] <- x[1] + x[2]
+    
+    -sum(posterior_summary(ln_prob_data, ln_prior_c, list(1))$ln_ml)
+  }
+  
+  empirical_prior <- optim(c(0,0), marginal_likelihood)
+  
+  x <- -log(1+exp(-empirical_prior$par))
+  
+  ln_prior_c <- rep(-Inf, 12)
+  ln_prior_c[5] <- VGAM::log1mexp(-x[1]) + VGAM::log1mexp(-x[2])
+  ln_prior_c[6] <- VGAM::log1mexp(-x[1]) + x[2]
+  ln_prior_c[7] <- x[1] + VGAM::log1mexp(-x[2])
+  ln_prior_c[8] <- x[1] + x[2]
+  
+  ln_prior_c
+}
