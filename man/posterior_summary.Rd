@@ -20,5 +20,5 @@ This function takes the log posterior probability of the data (posterior likelih
 returns log posterior odds
 }
 \examples{
-bmediatR()
+posterior_summary()
 }

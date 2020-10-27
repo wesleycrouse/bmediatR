@@ -73,8 +73,10 @@ batch_cols <- function(mat) {
 #' @param c_numerator The index of models to be summed in the numberator of the posterior odds. Models and their order provided with
 #' model_summary().
 #' @export
-#' @examples bmediatR()
-posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator){
+#' @examples posterior_summary()
+posterior_summary <- function(ln_prob_data, 
+                              ln_prior_c, 
+                              c_numerator){
   #function to compute log odds from log probabilities
   ln_odds <- function(ln_p, numerator){
     ln_odds_numerator <- apply(ln_p[,numerator,drop=F], 1, matrixStats::logSumExp)
@@ -153,16 +155,46 @@ posterior_summary <- function(ln_prob_data, ln_prior_c, c_numerator){
   ln_prior_odds <- sapply(c_numerator, ln_odds, ln_p=ln_prior_c)
   ln_prior_odds <- matrix(ln_prior_odds, ncol=length(c_numerator))
   rownames(ln_prior_odds) <- rownames(ln_post_c)
-  colnames(ln_prior_odds) <- c_numerator
-  
+
   #compute posterior odds for each combination of cases
   ln_post_odds <- sapply(c_numerator, ln_odds, ln_p=ln_post_c)
   ln_post_odds <- matrix(ln_post_odds, ncol=length(c_numerator))
   rownames(ln_post_odds) <- rownames(ln_post_c)
-  colnames(ln_post_odds) <- c_numerator
+  
+  if (is.null(c_numerator)) {
+    colnames(ln_post_odds) <- colnames(ln_prior_odds) <- c_numerator
+  } else {
+    colnames(ln_post_odds) <- colnames(ln_prior_odds) <- names(c_numerator)
+  }
   
   #return results
   list(ln_post_c=ln_post_c, ln_post_odds=ln_post_odds, ln_prior_odds=ln_prior_odds, ln_ml=ln_ml)
+}
+
+#' Column indeces for commonly used posterior odds
+#'
+#' This helper function returns the columns of the log posterior model probabilities to be summed for
+#' commonly desired log posterior odds summaries.
+#'
+#' @param odds_type The desired posterior odds.
+#' @export
+#' @examples return_preset_odds_index()
+return_preset_odds_index <- function(odds_type = c("mediation", 
+                                                   "partial", 
+                                                   "complete", 
+                                                   "colocal", 
+                                                   "y_depends_x", 
+                                                   "reactive")) {
+  
+  presets <- list("mediation" = c(4, 8),
+                  "partial" = 8,
+                  "complete" = 4,
+                  "colocal" = 7,
+                  "y_depends_x" = c(4:8, 11, 12),
+                  "reactive" = 9:12)
+  
+  index_list <- presets[odds_type]
+  index_list
 }
 
 #' Bayesian model selection for mediation analysis function 
@@ -445,9 +477,9 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
   #c11: '1,0,*' / H3 and H7
   #c12: '1,1,*' / H3 and H8
   
-  output <- posterior_summary(ln_prob_data, ln_prior_c, list(c(4,8), 8, 4, 7, c(4:8,11,12), 9:12))
-  colnames(output$ln_post_odds) <- c("mediation", "partial", "complete", "colocal", "y_depends_x", "reactive")
-  colnames(output$ln_prior_odds) <- colnames(output$ln_post_odds)
+  preset_odds_index <- return_preset_odds_index()
+  output <- posterior_summary(ln_prob_data, ln_prior_c, preset_odds_index)
+  colnames(output$ln_post_odds) <- colnames(output$ln_prior_odds) <- colnames(output$ln_post_odds)
   
   #return results
   output$ln_prior_c <- matrix(ln_prior_c, nrow = 1)
