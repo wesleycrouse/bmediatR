@@ -36,7 +36,7 @@ map_df_to_list <- function (map, chr_column = "chr", pos_column = "cM", marker_c
   result
 }
 
-#' Barplot of posterior model probabilities function
+#' Barplot of posterior model probabilities
 #'
 #' This function takes posterior probability results from mediation_bf() and plots barplots of posterior model probabilities.
 #'
@@ -46,6 +46,8 @@ map_df_to_list <- function (map, chr_column = "chr", pos_column = "cM", marker_c
 #' @param med_var DEFAULT: "protein.id". The column in med_annot to be used as a mediator id.
 #' @param stack DEFAULT: FALSE. If TRUE, a stacked barplot is produced. If FALSE, a staggered
 #' barplot is produced.
+#' @param add_number_labels DEFAULT: FALSE. Add posterior probabilities as text above bars.
+#' @param label_size DEFAULT: 5. Text size of probability labels, when included.
 #'
 #' @export
 #' @examples plot_posterior_bar()
@@ -56,6 +58,8 @@ plot_posterior_bar <- function(bmediatR_object,
                                stack = FALSE,
                                bar_col = c("seagreen4", "seagreen1", "skyblue", "goldenrod1", "goldenrod4", "gray"),
                                relabel_x = NULL,
+                               add_number_labels = FALSE,
+                               label_size = 5,
                                main = NULL) {
   
   ## Flag for reactive model
@@ -137,7 +141,106 @@ plot_posterior_bar <- function(bmediatR_object,
     p <- p + ggplot2::geom_bar(ggplot2::aes(x = symbol, y = post_p, fill = model), position = "dodge", stat = "summary", fun = "mean") +
       ggplot2::geom_hline(yintercept = c(0, 1), col = "gray", linetype = "dashed")
   }
+  if (add_number_labels) {
+    p <- p + geom_text(data = prior_dat, 
+                       aes(case, prior_p, group = model, label = round(prior_p, 2)), 
+                       position = position_dodge(width = 0.9),
+                       size = label_size)
+  }
   
+  p
+}
+
+#' Barplot of prior model probabilities
+#'
+#' This function takes posterior probability results from mediation_bf() and plots barplots of prior model probabilities.
+#'
+#' @param bmediatR_object Output from bmediatR(). 
+#' @param stack DEFAULT: FALSE. If TRUE, a stacked barplot is produced. If FALSE, a staggered
+#' barplot is produced.
+#' @param add_number_labels DEFAULT: FALSE. Add posterior probabilities as text above bars.
+#' @param label_size DEFAULT: 5. Text size of probability labels, when included.
+#'
+#' @export
+#' @examples plot_prior_bar()
+plot_prior_bar <- function(bmediatR_object,
+                           stack = FALSE,
+                           bar_col = c("seagreen4", "seagreen1", "skyblue", "goldenrod1", "goldenrod4", "gray"),
+                           relabel_x = NULL,
+                           add_number_labels = FALSE,
+                           label_size = 5,
+                           main = NULL) {
+  
+  ## Flag for reactive model
+  prior_mat <- bmediatR_object$ln_prior_c
+  model_flag <- is.finite(prior_mat)
+  names(model_flag) <- colnames(prior_mat)
+  
+  ## Long names
+  long_names <- c("other non-med", "other non-med", "other non-med", 
+                  "complete med", "other non-med", "other non-med",
+                  "co-local", "partial med", "other non-med",
+                  "complete med (react)", "other non-med", "partial med (react)")
+  names(long_names) <- colnames(prior_mat)
+  
+  bar_col <- bar_col[c(model_flag[c("0,1,1", "1,1,1", "1,1,0", "1,1,*", "1,0,*")], TRUE)]
+
+  prior_dat <- exp(bmediatR_object$ln_prior_c) %>%
+    as.data.frame %>%
+    dplyr::rename("partial med" = `1,1,1`,
+                  "complete med" = `0,1,1`,
+                  "co-local" = `1,1,0`,
+                  "partial med (react)" = `1,1,*`,
+                  "complete med (react)" = `1,0,*`)
+  
+  ## Calculating non-mediation or co-local probability
+  prior_dat <- prior_dat %>%
+    dplyr::left_join(prior_dat %>%
+                       dplyr::select(contains(",")) %>%
+                       dplyr::mutate("other non-med" = rowSums(.[-1]))) %>%
+    dplyr::select(-contains(",")) %>%
+    tidyr::gather(key = model, value = prior_p)
+  
+  ## Set factors
+  models_use <- unique(long_names[model_flag])
+  prior_dat <- prior_dat %>%
+    dplyr::filter(model %in% models_use) %>%
+    dplyr::mutate(model = factor(model, levels = c("complete med", "partial med", "co-local", "partial med (react)", "complete med (react)", "other non-med")),
+                  case = "Prior")
+  
+  bar_theme <- ggplot2::theme(panel.grid.major = ggplot2::element_blank(), 
+                              panel.grid.minor = ggplot2::element_blank(),
+                              panel.background = ggplot2::element_blank(), 
+                              axis.line = ggplot2::element_line(colour = "black"),
+                              plot.title = ggplot2::element_text(hjust = 0.5, size = 16, face = "plain"), 
+                              axis.title.x = ggplot2::element_blank(),
+                              axis.text.x = ggplot2::element_text(hjust = 0.5, size = 14, face = "plain"),
+                              axis.title.y = ggplot2::element_text(size = 14, face = "plain"),
+                              axis.text.y = ggplot2::element_text(size = 14, face = "plain"),
+                              axis.ticks.y = ggplot2::element_blank(),
+                              legend.title = ggplot2::element_text(size = 14),
+                              legend.text = ggplot2::element_text(size = 14))
+  
+  p <- ggplot2::ggplot(data = prior_dat) +
+    ggplot2::scale_fill_manual(values = bar_col) +
+    ggplot2::ylab("Prior model probability") + 
+    bar_theme
+  if (!is.null(main)) {
+    p <- p + ggplot2::ggtitle(main)
+  }
+  if (stack) {
+    p <- p + ggplot2::geom_col(ggplot2::aes(x = case, y = prior_p, fill = model), width = 0.5) 
+  } else {
+    p <- p + ggplot2::geom_bar(ggplot2::aes(x = case, y = prior_p, fill = model), position = "dodge", stat = "summary", fun = "mean") +
+      ggplot2::geom_hline(yintercept = c(0, 1), col = "gray", linetype = "dashed")
+  }
+  if (add_number_labels) {
+    p <- p + geom_text(data = prior_dat, 
+                       aes(case, prior_p, group = model, label = round(prior_p, 2)), 
+                       position = position_dodge(width = 0.9),
+                       size = label_size)
+  }
+
   p
 }
 
