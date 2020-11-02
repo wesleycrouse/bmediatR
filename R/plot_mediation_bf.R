@@ -152,6 +152,7 @@ plot_posterior_bar <- function(bmediatR_object,
 #' @param include_chr DEFAULT: c(1:19, "X"). Chromosomes to include in plot.
 #' @param expland_lim_factor DEFAULT: 0.025. Scale to increase plot limits by.
 #' @param label_thresh DEFAULT: NULL. Label mediators that surpass label_thresh. Default does not add labels.
+#' @param label_only_chr DEFAULT: NULL. Only label mediators that pass label_thresh on the specified chromosome.
 #' @param qtl_dat DEFAULT: NULL. QTL data that includes position of QTL and outcome. Adds ticks to the figure.
 #' @export
 #' @examples plot_posterior_odds()
@@ -162,6 +163,7 @@ plot_posterior_odds <- function(bmediatR_object,
                                 include_chr = c(1:19, "X"), 
                                 expand_lim_factor = 0.025, 
                                 label_thresh = NULL, 
+                                label_only_chr = NULL,
                                 bgcol = "white", altcol = "gray", altbgcol = "white", 
                                 hlines_col = "gray80", col = "black", cex = 0.75,
                                 qtl_dat = NULL,
@@ -202,8 +204,28 @@ plot_posterior_odds <- function(bmediatR_object,
   
   xpos <- qtl2:::map_to_xpos(map = med_map, gap = gap)
   
-  if (!is.null(label_thresh) & any(post_odds > label_thresh)) {
-    labels <- rownames(post_odds)[post_odds > label_thresh]
+  ## Mediator labels
+  label_dat <- matrix(bmediatR_object[["ln_post_odds"]][,model_type], ncol = 1)
+  colnames(label_dat) <- "post_odds"
+  rownames(label_dat) <- rownames(bmediatR_object[["ln_post_odds"]])
+  label_dat <- label_dat %>%
+    as.data.frame %>%
+    tibble::rownames_to_column(med_var) %>%
+    dplyr::left_join(med_map_df)
+  if (!is.null(label_only_chr)) {
+    label_dat <- label_dat %>%
+      dplyr::filter(chr == label_only_chr)
+  } else {
+    label_dat <- label_dat %>%
+      dplyr::filter(chr %in% include_chr)
+  }
+  label_post_odds <- label_dat %>%
+    dplyr::select(tidyselect::all_of(med_var), post_odds) %>%
+    tibble::column_to_rownames(med_var) %>%
+    as.matrix()
+  
+  if (!is.null(label_thresh) & any(label_post_odds > label_thresh)) {
+    labels <- rownames(label_post_odds)[label_post_odds > label_thresh]
     
     label_map_df <- med_map_df %>%
       filter((!!as.symbol(med_var)) %in% labels) 

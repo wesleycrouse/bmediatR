@@ -12,6 +12,7 @@ plot_posterior_odds(
   include_chr = c(1:19, "X"),
   expand_lim_factor = 0.025,
   label_thresh = NULL,
+  label_only_chr = NULL,
   bgcol = "white",
   altcol = "gray",
   altbgcol = "white",
@@ -34,6 +35,8 @@ for genome-wide mediators.}
 \item{include_chr}{DEFAULT: c(1:19, "X"). Chromosomes to include in plot.}
 
 \item{label_thresh}{DEFAULT: NULL. Label mediators that surpass label_thresh. Default does not add labels.}
+
+\item{label_only_chr}{DEFAULT: NULL. Only label mediators that pass label_thresh on the specified chromosome.}
 
 \item{qtl_dat}{DEFAULT: NULL. QTL data that includes position of QTL and outcome. Adds ticks to the figure.}
 
