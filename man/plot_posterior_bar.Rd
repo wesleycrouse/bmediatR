@@ -14,6 +14,7 @@ plot_posterior_bar(
   relabel_x = NULL,
   add_number_labels = FALSE,
   label_size = 5,
+  num_dig = 3,
   main = NULL
 )
 }
@@ -32,6 +33,9 @@ barplot is produced.}
 \item{add_number_labels}{DEFAULT: FALSE. Add posterior probabilities as text above bars.}
 
 \item{label_size}{DEFAULT: 5. Text size of probability labels, when included.}
+
+\item{num_dig}{DEFAULT: 3. The number of digits after the decimal point if probabilities
+are being included as labels.}
 }
 \description{
 This function takes posterior probability results from mediation_bf() and plots barplots of posterior model probabilities.

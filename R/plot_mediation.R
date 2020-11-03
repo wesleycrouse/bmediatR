@@ -48,7 +48,8 @@ map_df_to_list <- function (map, chr_column = "chr", pos_column = "cM", marker_c
 #' barplot is produced.
 #' @param add_number_labels DEFAULT: FALSE. Add posterior probabilities as text above bars.
 #' @param label_size DEFAULT: 5. Text size of probability labels, when included.
-#'
+#' @param num_dig DEFAULT: 3. The number of digits after the decimal point if probabilities
+#' are being included as labels.
 #' @export
 #' @examples plot_posterior_bar()
 plot_posterior_bar <- function(bmediatR_object,
@@ -60,21 +61,21 @@ plot_posterior_bar <- function(bmediatR_object,
                                relabel_x = NULL,
                                add_number_labels = FALSE,
                                label_size = 5,
+                               num_dig = 3,
                                main = NULL) {
   
   ## Flag for reactive model
-  prior_mat <- bmediatR_object$ln_prior_c
-  model_flag <- is.finite(prior_mat)
-  names(model_flag) <- colnames(prior_mat)
+  post_mat <- bmediatR_object$ln_post_c[1,, drop = FALSE]
+  model_flag <- is.finite(post_mat)
+  names(model_flag) <- colnames(post_mat)
   
   ## Long names
   long_names <- c("other non-med", "other non-med", "other non-med", 
                   "complete med", "other non-med", "other non-med",
                   "co-local", "partial med", "other non-med",
                   "complete med (react)", "other non-med", "partial med (react)")
-  names(long_names) <- colnames(prior_mat)
+  names(long_names) <- colnames(post_mat)
   
-
   bar_col <- bar_col[c(model_flag[c("0,1,1", "1,1,1", "1,1,0", "1,1,*", "1,0,*")], TRUE)]
 
   posterior_dat <- exp(bmediatR_object$ln_post_c) %>%
@@ -85,7 +86,7 @@ plot_posterior_bar <- function(bmediatR_object,
                   "co-local" = `1,1,0`,
                   "partial med (react)" = `1,1,*`,
                   "complete med (react)" = `1,0,*`)
-
+  
   # Using annotation information
   if (!is.null(med_annot)) {
     posterior_dat <- posterior_dat %>%
@@ -126,7 +127,6 @@ plot_posterior_bar <- function(bmediatR_object,
   if (!is.null(relabel_x)) {
     posterior_dat$symbol <- relabel_x
   }
-  
   p <- ggplot2::ggplot(data = posterior_dat %>% 
                          dplyr::filter((!!as.symbol(med_var)) == mediator_id)) +
     ggplot2::scale_fill_manual(values = bar_col) +
@@ -142,8 +142,9 @@ plot_posterior_bar <- function(bmediatR_object,
       ggplot2::geom_hline(yintercept = c(0, 1), col = "gray", linetype = "dashed")
   }
   if (add_number_labels) {
-    p <- p + geom_text(data = posterior_dat, 
-                       aes(case, post_p, group = model, label = round(post_p, 2)), 
+    p <- p + geom_text(data = posterior_dat %>% 
+                         dplyr::filter((!!as.symbol(med_var)) == mediator_id), 
+                       aes(symbol, post_p, group = model, label = round(post_p, digits = num_dig)), 
                        position = position_dodge(width = 0.9),
                        size = label_size)
   }
@@ -160,7 +161,8 @@ plot_posterior_bar <- function(bmediatR_object,
 #' barplot is produced.
 #' @param add_number_labels DEFAULT: FALSE. Add posterior probabilities as text above bars.
 #' @param label_size DEFAULT: 5. Text size of probability labels, when included.
-#'
+#' @param num_dig DEFAULT: 3. The number of digits after the decimal point if probabilities
+#' are being included as labels.
 #' @export
 #' @examples plot_prior_bar()
 plot_prior_bar <- function(bmediatR_object,
@@ -169,6 +171,7 @@ plot_prior_bar <- function(bmediatR_object,
                            relabel_x = NULL,
                            add_number_labels = FALSE,
                            label_size = 5,
+                           num_dig = 3,
                            main = NULL) {
   
   ## Flag for reactive model
@@ -236,7 +239,7 @@ plot_prior_bar <- function(bmediatR_object,
   }
   if (add_number_labels) {
     p <- p + geom_text(data = prior_dat, 
-                       aes(case, prior_p, group = model, label = round(prior_p, 2)), 
+                       aes(case, prior_p, group = model, label = round(prior_p, digits = num_dig)), 
                        position = position_dodge(width = 0.9),
                        size = label_size)
   }
@@ -271,6 +274,8 @@ plot_posterior_odds <- function(bmediatR_object,
                                 hlines_col = "gray80", col = "black", cex = 0.75,
                                 qtl_dat = NULL,
                                 outcome_symbol = NULL,
+                                ymax = NULL,
+                                ymin = NULL,
                                 ...) {
   
   model_type <- model_type[1]
@@ -299,8 +304,12 @@ plot_posterior_odds <- function(bmediatR_object,
   gap <- sum(qtl2::chr_lengths(map))/100
   
   lim_shift <- (max(post_odds[,1]) - min(post_odds[,1])) * expand_lim_factor
+  
+  if (is.null(ymax)) { ymax <- max(post_odds[,1]) + lim_shift }
+  if (is.null(ymin)) { ymin <- min(post_odds[,1]) - lim_shift }
+  
   qtl2:::plot.scan1(post_odds, map = med_map, ylab = "Log posterior odds", type = "p", pch = 20, 
-                    ylim = c(min(post_odds[,1]) - lim_shift, max(post_odds[,1]) + lim_shift),
+                    ylim = c(ymin, ymax),
                     bgcol = bgcol, altcol = altcol, altbgcol = altbgcol, hlines_col = hlines_col, col = col, 
                     cex = cex, gap = gap,
                     ...)

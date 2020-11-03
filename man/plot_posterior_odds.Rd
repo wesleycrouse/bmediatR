@@ -21,6 +21,8 @@ plot_posterior_odds(
   cex = 0.75,
   qtl_dat = NULL,
   outcome_symbol = NULL,
+  ymax = NULL,
+  ymin = NULL,
   ...
 )
 }
