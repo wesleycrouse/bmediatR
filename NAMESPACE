@@ -2,6 +2,7 @@
 
 export("%>%")
 export(bmediatR)
+export(estimate_empirical_prior)
 export(get_approx_pval)
 export(get_perm_pval)
 export(model_info)

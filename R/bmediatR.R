@@ -494,7 +494,7 @@ bmediatR <- function(y, M, X, Z = NULL, w = NULL,
 
 #' Definions and encodings for models included in the mediation analysis through Bayesian model selection 
 #'
-#' This function prints out a table describing the models considered in the mediation analysis
+#' This function prints out a table describing the models considered in the mediation analysis.
 #'
 #' @export
 #' @examples model_info()
@@ -528,9 +528,42 @@ model_info <- function(){
                "c12: '1,1,*' / H3 and H8"))
 }
 
-empirical_prior_complete <- function(ln_prob_data){
-  marginal_likelihood <- function(x){
-    x <- -log(1+exp(-x))
+#' Calculate empirical priors based on the relationships in the data between X, M, and y
+#'
+#' This function estimates log prior model probabilities that maximize the marginal likelihoods
+#' of the data from a prior run of bmediatR(). 
+#' 
+#' @param ln_prob_data Marginal likelihoods from bmediatR fit.
+#' @param model DEFAULT: "complete". If "complete", the marginal likelihoods evaluating the 
+#' effects of X on M and Y. If "partial" is specified, the effects of X on M and Y are fixed
+#' as present. A "reactive" mode is currently not supported because of the challenge in
+#' distinguishing the directionality of a relationship.
+#' @export
+#' @examples model_info()
+estimate_empirical_prior <- function(ln_prob_data,
+                                     model = c("complete", "partial")) {
+  model <- model[1]
+  
+  if (model == "complete") {
+    marginal_likelihood <- function(x){
+      x <- -log(1+exp(-x))
+      
+      ln_prior_c <- rep(-Inf, 12)
+      ln_prior_c[1] <- VGAM::log1mexp(-x[1]) + VGAM::log1mexp(-x[2]) + VGAM::log1mexp(-x[3])
+      ln_prior_c[2] <- VGAM::log1mexp(-x[1]) + VGAM::log1mexp(-x[2]) + x[3]
+      ln_prior_c[3] <- VGAM::log1mexp(-x[1]) + x[2] + VGAM::log1mexp(-x[3])
+      ln_prior_c[4] <- VGAM::log1mexp(-x[1]) + x[2] + x[3]
+      ln_prior_c[5] <- x[1] + VGAM::log1mexp(-x[2]) + VGAM::log1mexp(-x[3])
+      ln_prior_c[6] <- x[1] + VGAM::log1mexp(-x[2]) + x[3]
+      ln_prior_c[7] <- x[1] + x[2] + VGAM::log1mexp(-x[3])
+      ln_prior_c[8] <- x[1] + x[2] + x[3]
+      
+      -sum(posterior_summary(ln_prob_data, ln_prior_c, list(1))$ln_ml)
+    }
+    
+    empirical_prior <- optim(c(0,0,0), marginal_likelihood)
+    
+    x <- -log(1+exp(-empirical_prior$par))
     
     ln_prior_c <- rep(-Inf, 12)
     ln_prior_c[1] <- VGAM::log1mexp(-x[1]) + VGAM::log1mexp(-x[2]) + VGAM::log1mexp(-x[3])
@@ -541,49 +574,36 @@ empirical_prior_complete <- function(ln_prob_data){
     ln_prior_c[6] <- x[1] + VGAM::log1mexp(-x[2]) + x[3]
     ln_prior_c[7] <- x[1] + x[2] + VGAM::log1mexp(-x[3])
     ln_prior_c[8] <- x[1] + x[2] + x[3]
-    
-    -sum(posterior_summary(ln_prob_data, ln_prior_c, list(1))$ln_ml)
   }
-  
-  empirical_prior <- optim(c(0,0,0), marginal_likelihood)
-  
-  x <- -log(1+exp(-empirical_prior$par))
-  
-  ln_prior_c <- rep(-Inf, 12)
-  ln_prior_c[1] <- VGAM::log1mexp(-x[1]) + VGAM::log1mexp(-x[2]) + VGAM::log1mexp(-x[3])
-  ln_prior_c[2] <- VGAM::log1mexp(-x[1]) + VGAM::log1mexp(-x[2]) + x[3]
-  ln_prior_c[3] <- VGAM::log1mexp(-x[1]) + x[2] + VGAM::log1mexp(-x[3])
-  ln_prior_c[4] <- VGAM::log1mexp(-x[1]) + x[2] + x[3]
-  ln_prior_c[5] <- x[1] + VGAM::log1mexp(-x[2]) + VGAM::log1mexp(-x[3])
-  ln_prior_c[6] <- x[1] + VGAM::log1mexp(-x[2]) + x[3]
-  ln_prior_c[7] <- x[1] + x[2] + VGAM::log1mexp(-x[3])
-  ln_prior_c[8] <- x[1] + x[2] + x[3]
-  
-  ln_prior_c
-}
-
-empirical_prior_partial <- function(ln_prob_data){
-  marginal_likelihood <- function(x){
-    x <- -log(1+exp(-x))
+  else if (model == "partial") {
+    marginal_likelihood <- function(x){
+      x <- -log(1+exp(-x))
+      
+      ln_prior_c <- rep(-Inf, 12)
+      ln_prior_c[5] <- VGAM::log1mexp(-x[1]) + VGAM::log1mexp(-x[2])
+      ln_prior_c[6] <- VGAM::log1mexp(-x[1]) + x[2]
+      ln_prior_c[7] <- x[1] + VGAM::log1mexp(-x[2])
+      ln_prior_c[8] <- x[1] + x[2]
+      
+      -sum(posterior_summary(ln_prob_data, ln_prior_c, list(1))$ln_ml)
+    }
+    
+    empirical_prior <- optim(c(0,0), marginal_likelihood)
+    
+    x <- -log(1+exp(-empirical_prior$par))
     
     ln_prior_c <- rep(-Inf, 12)
     ln_prior_c[5] <- VGAM::log1mexp(-x[1]) + VGAM::log1mexp(-x[2])
     ln_prior_c[6] <- VGAM::log1mexp(-x[1]) + x[2]
     ln_prior_c[7] <- x[1] + VGAM::log1mexp(-x[2])
     ln_prior_c[8] <- x[1] + x[2]
-    
-    -sum(posterior_summary(ln_prob_data, ln_prior_c, list(1))$ln_ml)
   }
   
-  empirical_prior <- optim(c(0,0), marginal_likelihood)
-  
-  x <- -log(1+exp(-empirical_prior$par))
-  
-  ln_prior_c <- rep(-Inf, 12)
-  ln_prior_c[5] <- VGAM::log1mexp(-x[1]) + VGAM::log1mexp(-x[2])
-  ln_prior_c[6] <- VGAM::log1mexp(-x[1]) + x[2]
-  ln_prior_c[7] <- x[1] + VGAM::log1mexp(-x[2])
-  ln_prior_c[8] <- x[1] + x[2]
-  
+  ln_prior_c <- matrix(ln_prior_c, nrow = 1)
+  colnames(ln_prior_c) <- c("0,0,0", "0,0,1", "0,1,0", "0,1,1", 
+                            "1,0,0", "1,0,1", "1,1,0", "1,1,1", 
+                            "0,0,*", "0,1,*", "1,0,*", "1,1,*")
   ln_prior_c
 }
+
+

@@ -7,7 +7,7 @@
 model_info()
 }
 \description{
-This function prints out a table describing the models considered in the mediation analysis
+This function prints out a table describing the models considered in the mediation analysis.
 }
 \examples{
 model_info()
