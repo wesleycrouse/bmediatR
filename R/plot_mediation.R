@@ -142,8 +142,8 @@ plot_posterior_bar <- function(bmediatR_object,
       ggplot2::geom_hline(yintercept = c(0, 1), col = "gray", linetype = "dashed")
   }
   if (add_number_labels) {
-    p <- p + geom_text(data = prior_dat, 
-                       aes(case, prior_p, group = model, label = round(prior_p, 2)), 
+    p <- p + geom_text(data = posterior_dat, 
+                       aes(case, post_p, group = model, label = round(post_p, 2)), 
                        position = position_dodge(width = 0.9),
                        size = label_size)
   }
