@@ -889,4 +889,32 @@ bmediatR_v2 <- function(y, M, X, Z = NULL, w = NULL,
   output
 }
 
-
+model_info_v2 <- function(){
+  writeLines(c("likelihood models for all hypotheses",
+               "hypotheses encoded by presence (1) or absence (0) of 'X->m, m->y,X->y' edges on the DAG",
+               "(*) denotes reverse causation 'm<-y'",
+               "H1: '-,0,0' / y does not depend on X or m",
+               "H2: '-,1,0' / y depends on m but not X",
+               "H3: '-,0,1' / y depends on X but not m",
+               "H4: '-,1,1' / y depends on X and m",
+               "H5: '0,-,-' / m does not depend on X",
+               "H6: '1,-,-' / m depends on X",
+               "H7: '0,*,-' / m depends on y but not X",
+               "H8: '1,*,-' / m depends on X and y",
+               "",
+               "combinations of hypotheses for all cases",
+               "cases encoded by presence (1) or absence (0) of 'X->y, X->m, m->y' edges on the DAG",
+               "(*) denotes reverse causation 'm<-y'",
+               "c1:  '0,0,0' / H1 and H5",
+               "c2:  '0,1,0' / H2 and H5",
+               "c3:  '1,0,0' / H1 and H6",
+               "c4:  '1,1,0' / H2 and H6 - complete mediation",
+               "c5:  '0,0,1' / H3 and H5 ",
+               "c6:  '0,1,1' / H4 and H5",
+               "c7:  '1,0,1' / H3 and H6 - colocalization",
+               "c8:  '1,1,1' / H4 and H6 - partial mediation",
+               "c9:  '0,*,0' / H1 and H7",
+               "c10: '1,*,0' / H1 and H8",
+               "c11: '0,*,1' / H3 and H7",
+               "c12: '1,*,1' / H3 and H8"))
+}
