@@ -920,8 +920,10 @@ model_info_v2 <- function(){
 }
 
 bmediatR_v3 <- function(y, M, X, 
+                        Z = NULL,
                         Z_y = NULL,
                         Z_M = NULL,
+                        w = NULL,
                         w_y = NULL,
                         w_M = NULL,
                         kappa = 0.001,
@@ -962,11 +964,22 @@ bmediatR_v3 <- function(y, M, X,
     ln_prior_c <- ln_prior_c - matrixStats::logSumExp(ln_prior_c)
   }
   
-  #default values for w and Z
-  if (is.null(w_y)){w_y <- rep(1, n)}
-  if (is.null(w_M)){w_M <- rep(1, n)}
+  #default values for w
+  if (is.null(w)){
+    if (is.null(w_y)){w_y <- rep(1, n)}
+    if (is.null(w_M)){w_M <- rep(1, n)}
+  } else {
+    w_y <- w
+    w_M <- w
+  }
+  
+  #default values for Z, combine design matrices
+  if (is.null(Z)){Z <- matrix(NA, n, 0)}
   if (is.null(Z_y)){Z_y <- matrix(NA, n, 0)}
   if (is.null(Z_M)){Z_M <- matrix(NA, n, 0)}
+  
+  Z_y <- cbind(Z, Z_y)
+  Z_M <- cbind(Z, Z_M)
   
   #dimension of Z
   p_y <- ncol(Z_y)
