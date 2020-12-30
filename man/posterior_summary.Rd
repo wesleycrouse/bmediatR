@@ -9,15 +9,15 @@ posterior_summary(ln_prob_data, ln_prior_c, c_numerator)
 \arguments{
 \item{ln_prob_data}{Log posterior likelihoods under the various models, returned by bmediatR().}
 
-\item{ln_prior_c}{Log prior model probabilities. If posterior_summary() is being used for a non-default posterior odds
-summary, the log prior model probabilities used with bmediatR() are stored in its output.}
+\item{ln_prior_c}{Log prior case probabilities. If posterior_summary() is being used for a non-default posterior odds
+summary, the log prior case probabilities used with bmediatR() are stored in its output.}
 
-\item{c_numerator}{The index of models to be summed in the numberator of the posterior odds. Models and their order provided with
-model_summary().}
+\item{c_numerator}{The index of cases to be summed in the numerator of the posterior odds. Cases, their order, and likelihoods
+are provided in model_info().}
 }
 \description{
-This function takes the log posterior probability of the data (posterior likelihood) for the various models, the log prior model probabilities, and
-returns log posterior odds
+This function takes the log posterior probability of the data (posterior likelihood) for the various cases, the log prior case probabilities, and
+returns log posterior odds.
 }
 \examples{
 posterior_summary()

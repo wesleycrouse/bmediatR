@@ -9,17 +9,19 @@ bmediatR(
   M,
   X,
   Z = NULL,
+  Z_y = NULL,
+  Z_M = NULL,
   w = NULL,
-  kappa = rep(0.001, 8),
-  lambda = rep(0.001, 8),
-  tau_sq_mu = rep(1000, 8),
-  tau_sq_Z = rep(1000, 8),
-  phi_sq_X = c(NA, NA, 1, 0.5, NA, 1, NA, 0.5),
-  phi_sq_m = c(NA, 1, NA, 0.5, NA, NA, NA, NA),
-  phi_sq_y = c(NA, NA, NA, NA, NA, NA, 1, 0.5),
+  w_y = NULL,
+  w_M = NULL,
+  kappa = 0.001,
+  lambda = 0.001,
+  tau_sq_mu = 1000,
+  tau_sq_Z = 1000,
+  phi_sq = c(1, 1, 1),
   ln_prior_c = "complete",
-  options_X = list(sum_to_zero = T, center = F, scale = F),
-  verbose = T
+  options_X = list(sum_to_zero = TRUE, center = FALSE, scale = FALSE),
+  verbose = TRUE
 )
 }
 \arguments{
@@ -30,18 +32,49 @@ Names or rownames must match across M and X, and Z and w (if provided).}
 Names or rownames must match across y and X, and Z and w (if provided).}
 
 \item{X}{Design matrix of the driver. Names or rownames must match across y and M, and Z and w (if provided).
-One common application is for X to represent genetic information at a QTL as either founder strain haplotypes
-in a multiparental population or variant genotypes, though it is generalizable to types of variables.}
+One common application is for X to represent genetic information at a QTL, either as founder strain haplotypes
+or variant genotypes, though X is generalizable to other types of variables.}
 
-\item{Z}{DEFAULT: NULL. Design matrix of covariates that influence the outcome variable. Names or rownames must match across y, M and X, 
-and w (if provided).}
+\item{Z}{DEFAULT: NULL. Design matrix of covariates that influence the outcome and mediator variables. 
+Names or rownames must match to those of y, M, X, w, w_y, and w_M (if provided). If Z is provided, it supercedes Z_y and Z_M.}
 
-\item{w}{DEFAULT: NULL. Vector of weights for individuals in analysis. Names or rownames must match across y, M X, and Z (if provided).
-A common use would be for an analysis of strain means, where w would be a vector of the number of individuals per strain.
-If no w is given, observations are equally weighted as 1.}
+\item{Z_y}{DEFAULT: NULL. Design matrix of covariates that influence the outcome variable. 
+Names or rownames must match to those of y, M, X, Z_M, w, w_y, and w_M (if provided). If Z is provided, it supercedes Z_y and Z_M.}
+
+\item{Z_M}{DEFAULT: NULL. Design matrix of covariates that influence the mediator variables. 
+Names or rownames must match across y, M, X, Z_y, w, w_y, and w_M (if provided). If Z is provided, it supercedes Z_y and Z_M.}
+
+\item{w}{DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis that applies to both 
+y and M. Names must match across y, M, X, Z, Z_y, and Z_M (if provided). A common use would be for an analysis of strain means, where w 
+is a vector of the number of individuals per strain. If no w, w_y, or w_M is given, observations are equally weighted as 1s for y and M. 
+If w is provided, it supercedes w_y and w_M.}
+
+\item{w_y}{DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis, specific to the measurement
+of y. Names must match across y, M, X, Z, Z_y, Z_M, and w_M (if provided). A common use would be for an analysis of strain means, where y and M
+are summarized from a different number of individuals per strain. w_y is a vector of the number of individuals per strain used to
+measure y. If no w_y (or w) is given, observations are equally weighted as 1s for y.}
+
+\item{w_M}{DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis, specific to the measurement 
+of M. Names must match across y, M, X, Z, Z_y, Z_M, and w_y (if provided). A common use would be for an analysis of strain means, where y and M
+are summarized from a different number of individuals per strain. w_M is a vector of the number of individuals per strain use to 
+measure M. If no w_M (or w) is given, observations are equally weighted as 1s for M.}
+
+\item{tau_sq_mu}{DEFAULT: 1000. Variance component for the intercept. The DEFAULT represents a diffuse prior, analagous to 
+a fixed effect term.}
+
+\item{tau_sq_Z}{DEFAULT: 1000. Variance component for the covariates encoded in Z. The DEFAULT represents a diffuse prior, analagous 
+to fixed effect terms.}
+
+\item{phi_sq}{DEFAULT: c(1, 1, 1). Each element of (a, b, c) represents one of the relationships being evaluated for mediation, 
+specifically the ratio of signal to noise. a is the effect of X on M, b is the effect of M on y, and c is the effect of X on y. 
+The DEFAULT represents relationships that explain 50% of the variation in the outcome variable.}
+
+\item{ln_prior_c}{DEFAULT: "complete". The prior log case probabilities. See model_info() for description of likelihoods and their
+combinations into cases. Simplified pre-set options are available, including "complete", "partial", and "reactive".}
 }
 \description{
-This function takes an outcome, mediator(s), and a driver as a design matrix to perform a Bayesian model selection analysis for mediation.
+This function takes an outcome (y), candidate mediators (M), and a driver as a design matrix (X) to perform a 
+Bayesian model selection analysis for mediation.
 }
 \examples{
 bmediatR()

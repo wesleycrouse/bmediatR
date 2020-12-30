@@ -5,15 +5,15 @@
 \title{Column indeces for commonly used posterior odds}
 \usage{
 return_preset_odds_index(
-  odds_type = c("mediation", "partial", "complete", "colocal", "y_depends_x",
-    "reactive")
+  odds_type = c("mediation", "partial", "complete", "colocal", "mediation_or_colocal",
+    "y_depends_x", "reactive")
 )
 }
 \arguments{
 \item{odds_type}{The desired posterior odds.}
 }
 \description{
-This helper function returns the columns of the log posterior model probabilities to be summed for
+This helper function returns the columns of the log posterior case probabilities to be summed for
 commonly desired log posterior odds summaries.
 }
 \examples{
