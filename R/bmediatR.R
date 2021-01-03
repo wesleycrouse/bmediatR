@@ -217,6 +217,36 @@ return_preset_odds_index <- function(odds_type = c("mediation",
   index_list
 }
 
+## Function to optionally align data
+align_data <- function(y, M, X, 
+                       Z_y, Z_M,
+                       w_y, w_M,
+                       verbose = TRUE) {
+  
+  overlapping_samples <- Reduce(f = intersect, x = list(names(y), 
+                                                        rownames(M),
+                                                        rownames(X),
+                                                        rownames(Z_y), 
+                                                        rownames(Z_M),
+                                                        names(w_y),
+                                                        names(w_M)))
+  
+  if (length(overlapping_samples) == 0) {
+    stop("No samples overlap. Check rownames of M, X, Z (or Z_y and Z_M) and names of y and w (or w_y and w_M).", call. = FALSE)
+  } else if (verbose) {
+    writeLines(text = c("Number of overlapping samples:", length(overlapping_samples)))
+  }
+  
+  # Return aligned data
+  list(y = y[overlapping_samples],
+       M = M[overlapping_samples,],
+       X = X[overlapping_samples,],
+       Z_y = Z_y[overlapping_samples,],
+       Z_M = Z_M[overlapping_samples,],
+       w_y = w_y[overlapping_samples],
+       w_M = w_M[overlapping_samples])
+}
+
 #' Bayesian model selection for mediation analysis function 
 #'
 #' This function takes an outcome (y), candidate mediators (M), and a driver as a design matrix (X) to perform a 
@@ -256,34 +286,20 @@ return_preset_odds_index <- function(odds_type = c("mediation",
 #' The DEFAULT represents relationships that explain 50% of the variation in the outcome variable.
 #' @param ln_prior_c DEFAULT: "complete". The prior log case probabilities. See model_info() for description of likelihoods and their
 #' combinations into cases. Simplified pre-set options are available, including "complete", "partial", and "reactive".
+#' @param align_data DEFAULT: TRUE. If TRUE, expect vector and matrix inputes to have names and rownames, respectively. The overlapping data
+#' will then be aligned, allowing the user to not have to reduce data to overlapping samples and order them.
 #' @export
 #' @examples bmediatR()
 bmediatR <- function(y, M, X, 
-                     Z = NULL,
-                     Z_y = NULL,
-                     Z_M = NULL,
-                     w = NULL,
-                     w_y = NULL,
-                     w_M = NULL,
-                     kappa = 0.001,
-                     lambda = 0.001,
-                     tau_sq_mu = 1000,
-                     tau_sq_Z = 1000,
+                     Z = NULL, Z_y = NULL, Z_M = NULL,
+                     w = NULL, w_y = NULL, w_M = NULL,
+                     kappa = 0.001, lambda = 0.001,
+                     tau_sq_mu = 1000, tau_sq_Z = 1000,
                      phi_sq = c(1, 1, 1),
                      ln_prior_c = "complete",
                      options_X = list(sum_to_zero = TRUE, center = FALSE, scale = FALSE),
+                     align_data = TRUE,
                      verbose = TRUE) {
-  
-  if (verbose) { print("Initializing", quote = FALSE) }
-  
-  #reformat priors
-  kappa = rep(kappa, 8)
-  lambda = rep(lambda, 8)
-  tau_sq_mu = rep(tau_sq_mu, 8)
-  tau_sq_Z = rep(tau_sq_Z, 8)
-  phi_sq_X = c(NA,NA,phi_sq[3],phi_sq[3],NA,phi_sq[1],NA,phi_sq[1])
-  phi_sq_m = c(NA,phi_sq[2],NA,phi_sq[2],NA,NA,NA,NA)
-  phi_sq_y = c(NA,NA,NA,NA,NA,NA,phi_sq[2],phi_sq[2])
   
   #dimension of y
   n <- length(y)
@@ -298,33 +314,47 @@ bmediatR <- function(y, M, X,
     ln_prior_c <- ln_prior_c - matrixStats::logSumExp(ln_prior_c)
   }
   
-  #default values for w
-  if (is.null(w)){
-    if (is.null(w_y)){w_y <- rep(1, n)}
-    if (is.null(w_M)){w_M <- rep(1, n)}
-  } else {
-    w_y <- w
-    w_M <- w
-  }
-  
   #default values for Z, combine design matrices
-  if (is.null(Z)){Z <- matrix(NA, n, 0)}
-  if (is.null(Z_y)){Z_y <- matrix(NA, n, 0)}
-  if (is.null(Z_M)){Z_M <- matrix(NA, n, 0)}
+  if (is.null(Z)) { Z <- matrix(NA, n, 0) }
+  if (is.null(Z_y)) { Z_y <- matrix(NA, n, 0) }
+  if (is.null(Z_M)) { Z_M <- matrix(NA, n, 0) }
   
   Z_y <- cbind(Z, Z_y)
   Z_M <- cbind(Z, Z_M)
   
-  #dimension of Z
-  p_y <- ncol(Z_y)
-  p_M <- ncol(Z_M)
-  
-  #ensure X, M, and Z are matrices
+  #ensure X, M, Z_y, and Z_M are matrices
   X <- as.matrix(X)
   M <- as.matrix(M)
   Z_y <- as.matrix(Z_y)
   Z_M <- as.matrix(Z_M)
   
+  #ensure y is a vector
+  if (is.matrix(y)) { y <- y[,1] }
+  
+  #default values for w
+  if (is.null(w)) {
+    if (is.null(w_y)) { w_y <- rep(1, n); names(w_y) <- names(y) }
+    if (is.null(w_M)) { w_M <- rep(1, n); names(w_M) <- names(y) }
+  } else {
+    w_y <- w
+    w_M <- w
+  }
+
+  #optionally align data
+  if (align_data) {
+    aligned_data <- align_data(y = y, M = M, X = X,
+                               Z_y = Z_y, Z_M = Z_M,
+                               w_y = w_y, w_M = w_M, 
+                               verbose = verbose)
+    y <- aligned_data$y
+    M <- aligned_data$M
+    X <- aligned_data$X
+    Z_y <- aligned_data$Z_y
+    Z_M <- aligned_data$Z_M
+    w_y <- aligned_data$w_y
+    w_M <- aligned_data$w_M
+  }
+
   #drop observations with missing y or X and update n
   complete_y <- !is.na(y)
   complete_X <- !apply(is.na(X), 1, any)
@@ -339,27 +369,55 @@ bmediatR <- function(y, M, X,
   
   n <- length(y)
   
+  #drop columns of Z_y and Z_M that are invariant
+  Z_y_drop <- which(apply(Z_y, 2, function(x) var(x)) == 0)
+  Z_M_drop <- which(apply(Z_M, 2, function(x) var(x)) == 0)
+  if (length(Z_y_drop) > 0) {
+    writeLines(paste("Dropping invariants columns from Z_y:", colnames(Z_y)[Z_y_drop]))
+    Z_y <- Z_y[,-Z_y_drop]
+  }
+  if (length(Z_M_drop) > 0) {
+    writeLines(paste("Dropping invariants columns from Z_M:", colnames(Z_M)[Z_M_drop]))
+    Z_M <- Z_M[,-Z_M_drop]
+  }
+  
+  #dimension of Z
+  p_y <- ncol(Z_y)
+  p_M <- ncol(Z_M)
+  
   #scale y, M, and Z
   y <- c(scale(y))
   M <- apply(M, 2, scale)
-  if (p_y > 0){Z_y <- apply(Z_y, 2, scale)}
-  if (p_M > 0){Z_M <- apply(Z_M, 2, scale)}
+  if (p_y > 0) { Z_y <- apply(Z_y, 2, scale) }
+  if (p_M > 0) { Z_M <- apply(Z_M, 2, scale) }
   
   #optionally use sum-to-zero contrast for X
   #recommended when X is a matrix of factors, with a column for every factor level
-  if (options_X$sum_to_zero==T){
+  if (options_X$sum_to_zero == TRUE) {
     C <- sumtozero_contrast(ncol(X))
     X <- X%*%C
   }
   
   #optionally center and scale X
-  X <- apply(X, 2, scale, center=options_X$center, scale=options_X$scale)
+  X <- apply(X, 2, scale, center = options_X$center, scale = options_X$scale)
   
   #dimension of X
   d <- ncol(X)
   
   #column design matrix for mu
   ones <- matrix(1, n)
+  
+  #begin Bayesian calculations
+  if (verbose) { print("Initializing", quote = FALSE) }
+  
+  #reformat priors
+  kappa = rep(kappa, 8)
+  lambda = rep(lambda, 8)
+  tau_sq_mu = rep(tau_sq_mu, 8)
+  tau_sq_Z = rep(tau_sq_Z, 8)
+  phi_sq_X = c(NA,NA,phi_sq[3],phi_sq[3],NA,phi_sq[1],NA,phi_sq[1])
+  phi_sq_m = c(NA,phi_sq[2],NA,phi_sq[2],NA,NA,NA,NA)
+  phi_sq_y = c(NA,NA,NA,NA,NA,NA,phi_sq[2],phi_sq[2])
   
   #identify likelihoods that are not supported by the prior
   #will not compute cholesky or likelihood for these
@@ -566,6 +624,30 @@ bmediatR <- function(y, M, X,
   output
 }
 
+## Function to optionally align data (for bmediatR_v0)
+align_data_v0 <- function(y, M, X, Z, w,
+                          verbose = TRUE) {
+  
+  overlapping_samples <- Reduce(f = intersect, x = list(names(y), 
+                                                        rownames(M),
+                                                        rownames(X),
+                                                        rownames(Z), 
+                                                        names(w)))
+  
+  if (length(overlapping_samples) == 0) {
+    stop("No samples overlap. Check rownames of M, X, Z and names of y and w.", call. = FALSE)
+  } else if (verbose) {
+    writeLines(text = c("Number of overlapping samples:", length(overlapping_samples)))
+  }
+  
+  # Return aligned data
+  list(y = y[overlapping_samples],
+       M = M[overlapping_samples,],
+       X = X[overlapping_samples,],
+       Z = Z[overlapping_samples,],
+       w = w[overlapping_samples])
+}
+
 #' Bayesian model selection for mediation analysis function, version 0 
 #'
 #' This function takes an outcome (y), candidate mediators (M), and a driver as a design matrix (X) to perform a 
@@ -591,6 +673,8 @@ bmediatR <- function(y, M, X,
 #' to fixed effect terms.
 #' @param ln_prior_c DEFAULT: "complete". The prior log case probabilities. See model_info() for description of likelihoods and their
 #' combinations into cases. Simplified pre-set options are available, including "complete", "partial", and "reactive".
+#' @param align_data DEFAULT: TRUE. If TRUE, expect vector and matrix inputes to have names and rownames, respectively. The overlapping data
+#' will then be aligned, allowing the user to not have to reduce data to overlapping samples and order them.
 #' @export
 #' @examples bmediatR_v0()
 bmediatR_v0 <- function(y, M, X, Z = NULL, w = NULL,
@@ -603,9 +687,8 @@ bmediatR_v0 <- function(y, M, X, Z = NULL, w = NULL,
                         phi_sq_y = c(NA,NA,NA,NA,NA,NA,1,0.5),
                         ln_prior_c = "complete",
                         options_X = list(sum_to_zero = TRUE, center = FALSE, scale = FALSE),
+                        align_data = TRUE,
                         verbose = T) {
-  
-  if (verbose) { print("Initializing", quote = FALSE) }
   
   #dimension of y
   n <- length(y)
@@ -620,18 +703,31 @@ bmediatR_v0 <- function(y, M, X, Z = NULL, w = NULL,
     ln_prior_c <- ln_prior_c - matrixStats::logSumExp(ln_prior_c)
   }
   
-  #default values for w and Z
-  if (is.null(w)){w <- rep(1, n)}
-  if (is.null(Z)){Z <- matrix(NA, n, 0)}
-  
-  #dimension of Z
-  p <- ncol(Z)
+  #default values for Z
+  if (is.null(Z)) { Z <- matrix(NA, n, 0); rownames(Z) <- names(y) }
   
   #ensure X, M, and Z are matrices
   X <- as.matrix(X)
   M <- as.matrix(M)
   Z <- as.matrix(Z)
   
+  #ensure y is a vector
+  if (is.matrix(y)) { y <- y[,1] }
+  
+  #default values for w
+  if (is.null(w)) { w <- rep(1, n); names(w) <- names(y) }
+  
+  #optionally align data
+  if (align_data) {
+    aligned_data <- align_data_v0(y = y, M = M, X = X, Z = Z, w = w,
+                                  verbose = verbose)
+    y <- aligned_data$y
+    M <- aligned_data$M
+    X <- aligned_data$X
+    Z <- aligned_data$Z
+    w <- aligned_data$w
+  }
+
   #drop observations with missing y or X and update n
   complete_y <- !is.na(y)
   complete_X <- !apply(is.na(X), 1, any)
@@ -644,10 +740,20 @@ bmediatR_v0 <- function(y, M, X, Z = NULL, w = NULL,
   
   n <- length(y)
   
+  #drop columns of Z that are invariant
+  Z_drop <- which(apply(Z, 2, function(x) var(x)) == 0)
+  if (length(Z_drop) > 0) {
+    writeLines(paste("Dropping invariants columns from Z:", colnames(Z)[Z_drop]))
+    Z <- Z[,-Z_drop]
+  }
+  
+  #dimension of Z
+  p <- ncol(Z)
+  
   #scale y, M, and Z
   y <- c(scale(y))
   M <- apply(M, 2, scale)
-  if (p > 0){Z <- apply(Z, 2, scale)}
+  if (p > 0) { Z <- apply(Z, 2, scale) }
   
   #optionally use sum-to-zero contrast for X
   #recommended when X is a matrix of factors, with a column for every factor level
@@ -657,13 +763,16 @@ bmediatR_v0 <- function(y, M, X, Z = NULL, w = NULL,
   }
   
   #optionally center and scale X
-  X <- apply(X, 2, scale, center=options_X$center, scale=options_X$scale)
+  X <- apply(X, 2, scale, center = options_X$center, scale = options_X$scale)
   
   #dimension of X
   d <- ncol(X)
   
   #column design matrix for mu
   ones <- matrix(1, n)
+  
+  #begin Bayesian calculations
+  if (verbose) { print("Initializing", quote = FALSE) }
   
   #identify likelihoods that are not supported by the prior
   #will not compute cholesky or likelihood for these

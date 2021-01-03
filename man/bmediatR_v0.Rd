@@ -19,6 +19,7 @@ bmediatR_v0(
   phi_sq_y = c(NA, NA, NA, NA, NA, NA, 1, 0.5),
   ln_prior_c = "complete",
   options_X = list(sum_to_zero = TRUE, center = FALSE, scale = FALSE),
+  align_data = TRUE,
   verbose = T
 )
 }
@@ -48,6 +49,9 @@ to fixed effect terms.}
 
 \item{ln_prior_c}{DEFAULT: "complete". The prior log case probabilities. See model_info() for description of likelihoods and their
 combinations into cases. Simplified pre-set options are available, including "complete", "partial", and "reactive".}
+
+\item{align_data}{DEFAULT: TRUE. If TRUE, expect vector and matrix inputes to have names and rownames, respectively. The overlapping data
+will then be aligned, allowing the user to not have to reduce data to overlapping samples and order them.}
 }
 \description{
 This function takes an outcome (y), candidate mediators (M), and a driver as a design matrix (X) to perform a 
