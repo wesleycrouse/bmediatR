@@ -25,20 +25,24 @@ bmediatR_v0(
 }
 \arguments{
 \item{y}{Vector or single column matrix of an outcome variable. Single outcome variable expected. 
-Names or rownames must match across M and X, and Z and w (if provided).}
+Names or rownames must match across M, X, Z, and w (if provided) when align_data = TRUE. If align_data = FALSE,
+dimensions and order must match across inputs.}
 
 \item{M}{Vector or matrix of mediator variables. Multiple mediator variables are supported. 
-Names or rownames must match across y and X, and Z and w (if provided).}
+Names or rownames must match across y, X, Z and w (if provided) when align_data = TRUE. If align_data = FALSE,
+dimensions and order must match across inputs.}
 
-\item{X}{Design matrix of the driver. Names or rownames must match across y and M, and Z and w (if provided).
-One common application is for X to represent genetic information at a QTL, either as founder strain haplotypes
-or variant genotypes, though X is generalizable to other types of variables.}
+\item{X}{Design matrix of the driver. Names or rownames must match across y, M, Z, and w (if provided) when align_data = TRUE. 
+If align_data = FALSE, dimensions and order must match across inputs. One common application is for X to represent genetic 
+information at a QTL, either as founder strain haplotypes or variant genotypes, though X is generalizable to other types of variables.}
 
 \item{Z}{DEFAULT: NULL. Design matrix of covariates that influence the outcome and mediator variables. 
-Names or rownames must match across y, M and X, and w (if provided).}
+Names or rownames must match across y, M, X, and w (if provided) when align_data = TRUE. If align_data = FALSE,
+dimensions and order must match across inputs..}
 
 \item{w}{DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis. 
-Names must match across y, M X, and Z (if provided). A common use would be for an analysis of strain means, where w 
+Names must match across y, M, X, and Z (if provided) when align_data = TRUE. If align_data = FALSE,
+dimensions and order must match across inputs. A common use would be for an analysis of strain means, where w 
 is a vector of the number of individuals per strain. If no w is given, observations are equally weighted as 1s.}
 
 \item{tau_sq_mu}{DEFAULT: 1000. Variance component for the intercept. The DEFAULT represents a diffuse prior, analagous to 

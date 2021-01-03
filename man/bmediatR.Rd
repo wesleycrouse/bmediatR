@@ -27,36 +27,44 @@ bmediatR(
 }
 \arguments{
 \item{y}{Vector or single column matrix of an outcome variable. Single outcome variable expected. 
-Names or rownames must match across M and X, and Z and w (if provided).}
+Names or rownames must match across M, X, Z, Z_y, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
+dimensions and order must match across inputs.}
 
 \item{M}{Vector or matrix of mediator variables. Multiple mediator variables are supported. 
-Names or rownames must match across y and X, and Z and w (if provided).}
+Names or rownames must match across y, X, Z, Z_y, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
+dimensions and order must match across inputs.}
 
-\item{X}{Design matrix of the driver. Names or rownames must match across y and M, and Z and w (if provided).
-One common application is for X to represent genetic information at a QTL, either as founder strain haplotypes
-or variant genotypes, though X is generalizable to other types of variables.}
+\item{X}{Design matrix of the driver. Names or rownames must match across y, M, Z, Z_y, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. 
+If align_data = FALSE, dimensions and order must match across inputs. One common application is for X to represent genetic information at a QTL, 
+either as founder strain haplotypes or variant genotypes, though X is generalizable to other types of variables.}
 
 \item{Z}{DEFAULT: NULL. Design matrix of covariates that influence the outcome and mediator variables. 
-Names or rownames must match to those of y, M, X, w, w_y, and w_M (if provided). If Z is provided, it supercedes Z_y and Z_M.}
+Names or rownames must match to those of y, M, X, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data=FALSE,
+dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.}
 
 \item{Z_y}{DEFAULT: NULL. Design matrix of covariates that influence the outcome variable. 
-Names or rownames must match to those of y, M, X, Z_M, w, w_y, and w_M (if provided). If Z is provided, it supercedes Z_y and Z_M.}
+Names or rownames must match to those of y, M, X, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
+dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.}
 
 \item{Z_M}{DEFAULT: NULL. Design matrix of covariates that influence the mediator variables. 
-Names or rownames must match across y, M, X, Z_y, w, w_y, and w_M (if provided). If Z is provided, it supercedes Z_y and Z_M.}
+Names or rownames must match across y, M, X, Z_y, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
+dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.}
 
 \item{w}{DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis that applies to both 
-y and M. Names must match across y, M, X, Z, Z_y, and Z_M (if provided). A common use would be for an analysis of strain means, where w 
+y and M. Names must match across y, M, X, Z, Z_y, and Z_M (if provided) when align_data = TRUE. If align_data = FALSE,
+dimensions and order must match across inputs. A common use would be for an analysis of strain means, where w 
 is a vector of the number of individuals per strain. If no w, w_y, or w_M is given, observations are equally weighted as 1s for y and M. 
 If w is provided, it supercedes w_y and w_M.}
 
 \item{w_y}{DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis, specific to the measurement
-of y. Names must match across y, M, X, Z, Z_y, Z_M, and w_M (if provided). A common use would be for an analysis of strain means, where y and M
+of y. Names must match across y, M, X, Z, Z_y, Z_M, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
+dimensions and order must match across inputs. A common use would be for an analysis of strain means, where y and M
 are summarized from a different number of individuals per strain. w_y is a vector of the number of individuals per strain used to
 measure y. If no w_y (or w) is given, observations are equally weighted as 1s for y.}
 
 \item{w_M}{DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis, specific to the measurement 
-of M. Names must match across y, M, X, Z, Z_y, Z_M, and w_y (if provided). A common use would be for an analysis of strain means, where y and M
+of M. Names must match across y, M, X, Z, Z_y, Z_M, and w_y (if provided) when align_data = TRUE. If align_data = FALSE,
+dimensions and order must match across inputs. A common use would be for an analysis of strain means, where y and M
 are summarized from a different number of individuals per strain. w_M is a vector of the number of individuals per strain use to 
 measure M. If no w_M (or w) is given, observations are equally weighted as 1s for M.}
 
