@@ -239,10 +239,10 @@ align_data <- function(y, M, X,
   
   # Return aligned data
   list(y = y[overlapping_samples],
-       M = M[overlapping_samples,],
-       X = X[overlapping_samples,],
-       Z_y = Z_y[overlapping_samples,],
-       Z_M = Z_M[overlapping_samples,],
+       M = M[overlapping_samples,, drop = FALSE],
+       X = X[overlapping_samples,, drop = FALSE],
+       Z_y = Z_y[overlapping_samples,, drop = FALSE],
+       Z_M = Z_M[overlapping_samples,, drop = FALSE],
        w_y = w_y[overlapping_samples],
        w_M = w_M[overlapping_samples])
 }
@@ -368,10 +368,10 @@ bmediatR <- function(y, M, X,
   complete_X <- !apply(is.na(X), 1, any)
   
   y <- y[complete_y & complete_X]
-  M <- M[complete_y & complete_X,,drop=F]
-  X <- X[complete_y & complete_X,,drop=F]
-  Z_y <- Z_y[complete_y & complete_X,,drop=F]
-  Z_M <- Z_M[complete_y & complete_X,,drop=F]
+  M <- M[complete_y & complete_X,, drop = FALSE]
+  X <- X[complete_y & complete_X,, drop = FALSE]
+  Z_y <- Z_y[complete_y & complete_X,, drop = FALSE]
+  Z_M <- Z_M[complete_y & complete_X,, drop = FALSE]
   w_y <- w_y[complete_y & complete_X]
   w_M <- w_M[complete_y & complete_X]
   
@@ -650,9 +650,9 @@ align_data_v0 <- function(y, M, X, Z, w,
   
   # Return aligned data
   list(y = y[overlapping_samples],
-       M = M[overlapping_samples,],
-       X = X[overlapping_samples,],
-       Z = Z[overlapping_samples,],
+       M = M[overlapping_samples,, drop = FALSE],
+       X = X[overlapping_samples,, drop = FALSE],
+       Z = Z[overlapping_samples,, drop = FALSE],
        w = w[overlapping_samples])
 }
 
