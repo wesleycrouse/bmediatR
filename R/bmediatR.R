@@ -253,28 +253,36 @@ align_data <- function(y, M, X,
 #' Bayesian model selection analysis for mediation.
 #' 
 #' @param y Vector or single column matrix of an outcome variable. Single outcome variable expected. 
-#' Names or rownames must match across M and X, and Z and w (if provided).
+#' Names or rownames must match across M, X, Z, Z_y, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs.
 #' @param M Vector or matrix of mediator variables. Multiple mediator variables are supported. 
-#' Names or rownames must match across y and X, and Z and w (if provided).
-#' @param X Design matrix of the driver. Names or rownames must match across y and M, and Z and w (if provided).
-#' One common application is for X to represent genetic information at a QTL, either as founder strain haplotypes
-#' or variant genotypes, though X is generalizable to other types of variables.
+#' Names or rownames must match across y, X, Z, Z_y, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs.
+#' @param X Design matrix of the driver. Names or rownames must match across y, M, Z, Z_y, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. 
+#' If align_data = FALSE, dimensions and order must match across inputs. One common application is for X to represent genetic information at a QTL, 
+#' either as founder strain haplotypes or variant genotypes, though X is generalizable to other types of variables.
 #' @param Z DEFAULT: NULL. Design matrix of covariates that influence the outcome and mediator variables. 
-#' Names or rownames must match to those of y, M, X, w, w_y, and w_M (if provided). If Z is provided, it supercedes Z_y and Z_M.
+#' Names or rownames must match to those of y, M, X, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data=FALSE,
+#' dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.
 #' @param Z_y DEFAULT: NULL. Design matrix of covariates that influence the outcome variable. 
-#' Names or rownames must match to those of y, M, X, Z_M, w, w_y, and w_M (if provided). If Z is provided, it supercedes Z_y and Z_M.
+#' Names or rownames must match to those of y, M, X, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.
 #' @param Z_M DEFAULT: NULL. Design matrix of covariates that influence the mediator variables. 
-#' Names or rownames must match across y, M, X, Z_y, w, w_y, and w_M (if provided). If Z is provided, it supercedes Z_y and Z_M.
+#' Names or rownames must match across y, M, X, Z_y, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.
 #' @param w DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis that applies to both 
-#' y and M. Names must match across y, M, X, Z, Z_y, and Z_M (if provided). A common use would be for an analysis of strain means, where w 
+#' y and M. Names must match across y, M, X, Z, Z_y, and Z_M (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs. A common use would be for an analysis of strain means, where w 
 #' is a vector of the number of individuals per strain. If no w, w_y, or w_M is given, observations are equally weighted as 1s for y and M. 
 #' If w is provided, it supercedes w_y and w_M.
 #' @param w_y DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis, specific to the measurement
-#' of y. Names must match across y, M, X, Z, Z_y, Z_M, and w_M (if provided). A common use would be for an analysis of strain means, where y and M
+#' of y. Names must match across y, M, X, Z, Z_y, Z_M, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs. A common use would be for an analysis of strain means, where y and M
 #' are summarized from a different number of individuals per strain. w_y is a vector of the number of individuals per strain used to
 #' measure y. If no w_y (or w) is given, observations are equally weighted as 1s for y.
 #' @param w_M DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis, specific to the measurement 
-#' of M. Names must match across y, M, X, Z, Z_y, Z_M, and w_y (if provided). A common use would be for an analysis of strain means, where y and M
+#' of M. Names must match across y, M, X, Z, Z_y, Z_M, and w_y (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs. A common use would be for an analysis of strain means, where y and M
 #' are summarized from a different number of individuals per strain. w_M is a vector of the number of individuals per strain use to 
 #' measure M. If no w_M (or w) is given, observations are equally weighted as 1s for M.
 #' @param tau_sq_mu DEFAULT: 1000. Variance component for the intercept. The DEFAULT represents a diffuse prior, analagous to 
@@ -314,10 +322,13 @@ bmediatR <- function(y, M, X,
     ln_prior_c <- ln_prior_c - matrixStats::logSumExp(ln_prior_c)
   }
   
+  #ensure y is a vector
+  if (is.matrix(y)) { y <- y[,1] }
+  
   #default values for Z, combine design matrices
-  if (is.null(Z)) { Z <- matrix(NA, n, 0) }
-  if (is.null(Z_y)) { Z_y <- matrix(NA, n, 0) }
-  if (is.null(Z_M)) { Z_M <- matrix(NA, n, 0) }
+  if (is.null(Z)) { Z <- matrix(NA, n, 0); rownames(Z) <- names(y) }
+  if (is.null(Z_y)) { Z_y <- matrix(NA, n, 0); rownames(Z_y) <- names(y) }
+  if (is.null(Z_M)) { Z_M <- matrix(NA, n, 0); rownames(Z_M) <- names(y) }
   
   Z_y <- cbind(Z, Z_y)
   Z_M <- cbind(Z, Z_M)
@@ -327,9 +338,6 @@ bmediatR <- function(y, M, X,
   M <- as.matrix(M)
   Z_y <- as.matrix(Z_y)
   Z_M <- as.matrix(Z_M)
-  
-  #ensure y is a vector
-  if (is.matrix(y)) { y <- y[,1] }
   
   #default values for w
   if (is.null(w)) {
@@ -656,16 +664,20 @@ align_data_v0 <- function(y, M, X, Z, w,
 #' have the option for covariates and weights specific to M and y.
 #'
 #' @param y Vector or single column matrix of an outcome variable. Single outcome variable expected. 
-#' Names or rownames must match across M and X, and Z and w (if provided).
+#' Names or rownames must match across M, X, Z, and w (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs.
 #' @param M Vector or matrix of mediator variables. Multiple mediator variables are supported. 
-#' Names or rownames must match across y and X, and Z and w (if provided).
-#' @param X Design matrix of the driver. Names or rownames must match across y and M, and Z and w (if provided).
-#' One common application is for X to represent genetic information at a QTL, either as founder strain haplotypes
-#' or variant genotypes, though X is generalizable to other types of variables.
+#' Names or rownames must match across y, X, Z and w (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs.
+#' @param X Design matrix of the driver. Names or rownames must match across y, M, Z, and w (if provided) when align_data = TRUE. 
+#' If align_data = FALSE, dimensions and order must match across inputs. One common application is for X to represent genetic 
+#' information at a QTL, either as founder strain haplotypes or variant genotypes, though X is generalizable to other types of variables.
 #' @param Z DEFAULT: NULL. Design matrix of covariates that influence the outcome and mediator variables. 
-#' Names or rownames must match across y, M and X, and w (if provided).
+#' Names or rownames must match across y, M, X, and w (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs..
 #' @param w DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis. 
-#' Names must match across y, M X, and Z (if provided). A common use would be for an analysis of strain means, where w 
+#' Names must match across y, M, X, and Z (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs. A common use would be for an analysis of strain means, where w 
 #' is a vector of the number of individuals per strain. If no w is given, observations are equally weighted as 1s.
 #' @param tau_sq_mu DEFAULT: 1000. Variance component for the intercept. The DEFAULT represents a diffuse prior, analagous to 
 #' a fixed effect term.
@@ -703,6 +715,9 @@ bmediatR_v0 <- function(y, M, X, Z = NULL, w = NULL,
     ln_prior_c <- ln_prior_c - matrixStats::logSumExp(ln_prior_c)
   }
   
+  #ensure y is a vector
+  if (is.matrix(y)) { y <- y[,1] }
+  
   #default values for Z
   if (is.null(Z)) { Z <- matrix(NA, n, 0); rownames(Z) <- names(y) }
   
@@ -710,9 +725,6 @@ bmediatR_v0 <- function(y, M, X, Z = NULL, w = NULL,
   X <- as.matrix(X)
   M <- as.matrix(M)
   Z <- as.matrix(Z)
-  
-  #ensure y is a vector
-  if (is.matrix(y)) { y <- y[,1] }
   
   #default values for w
   if (is.null(w)) { w <- rep(1, n); names(w) <- names(y) }
