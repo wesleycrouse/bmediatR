@@ -223,15 +223,13 @@ align_data <- function(y, M, X,
                        w_y, w_M,
                        verbose = TRUE) {
   
+  # M and Z_M can have NAs
   overlapping_samples <- Reduce(f = intersect, x = list(names(y), 
-                                                        rownames(M),
                                                         rownames(X),
                                                         rownames(Z_y), 
-                                                        rownames(Z_M),
-                                                        names(w_y),
-                                                        names(w_M)))
+                                                        names(w_y))
   
-  if (length(overlapping_samples) == 0) {
+  if (length(overlapping_samples) == 0 | !any(overlapping_samples %in% unique(c(rownames(M), rownames(Z_M), names(w_M))))) {
     stop("No samples overlap. Check rownames of M, X, Z (or Z_y and Z_M) and names of y and w (or w_y and w_M).", call. = FALSE)
   } else if (verbose) {
     writeLines(text = c("Number of overlapping samples:", length(overlapping_samples)))
@@ -263,13 +261,13 @@ align_data <- function(y, M, X,
 #' either as founder strain haplotypes or variant genotypes, though X is generalizable to other types of variables.
 #' @param Z DEFAULT: NULL. Design matrix of covariates that influence the outcome and mediator variables. 
 #' Names or rownames must match to those of y, M, X, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data=FALSE,
-#' dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.
+#' dimensions and order must match across inputs. If Z is provided, it is added interally to Z_y and Z_M.
 #' @param Z_y DEFAULT: NULL. Design matrix of covariates that influence the outcome variable. 
 #' Names or rownames must match to those of y, M, X, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
-#' dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.
+#' dimensions and order must match across inputs.
 #' @param Z_M DEFAULT: NULL. Design matrix of covariates that influence the mediator variables. 
 #' Names or rownames must match across y, M, X, Z_y, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
-#' dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.
+#' dimensions and order must match across inputs.
 #' @param w DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis that applies to both 
 #' y and M. Names must match across y, M, X, Z, Z_y, and Z_M (if provided) when align_data = TRUE. If align_data = FALSE,
 #' dimensions and order must match across inputs. A common use would be for an analysis of strain means, where w 
@@ -309,9 +307,6 @@ bmediatR <- function(y, M, X,
                      align_data = TRUE,
                      verbose = TRUE) {
   
-  #dimension of y
-  n <- length(y)
-  
   #presets for ln_prior_c; 
   ln_prior_c <- return_ln_prior_c_from_presets(ln_prior_c = ln_prior_c)
   
@@ -325,11 +320,13 @@ bmediatR <- function(y, M, X,
   #ensure y is a vector
   if (is.matrix(y)) { y <- y[,1] }
   
+  #dimension of y
+  n <- length(y)
+  
   #default values for Z, combine design matrices
   if (is.null(Z)) { Z <- matrix(NA, n, 0); rownames(Z) <- names(y) }
   if (is.null(Z_y)) { Z_y <- matrix(NA, n, 0); rownames(Z_y) <- names(y) }
   if (is.null(Z_M)) { Z_M <- matrix(NA, n, 0); rownames(Z_M) <- names(y) }
-  
   Z_y <- cbind(Z, Z_y)
   Z_M <- cbind(Z, Z_M)
   
@@ -484,11 +481,11 @@ bmediatR <- function(y, M, X,
   v7 <- c(tau_sq_mu[7], rep(tau_sq_Z[7], p_M), phi_sq_y[7])
   v8 <- c(tau_sq_mu[8], rep(phi_sq_X[8], d), rep(tau_sq_Z[8], p_M), phi_sq_y[8])
   
-  if (!sigma5_equal_sigma1 | !calc_ln_prob_data[1]){
+  if (!sigma5_equal_sigma1 | !calc_ln_prob_data[1]) {
     v5 <- c(tau_sq_mu[5], rep(tau_sq_Z[5], p_M))
   }
   
-  if (!sigma6_equal_sigma3 | !calc_ln_prob_data[3]){
+  if (!sigma6_equal_sigma3 | !calc_ln_prob_data[3]) {
     v6 <- c(tau_sq_mu[6], rep(phi_sq_X[6], d), rep(tau_sq_Z[6], p_M))
   }
   
@@ -503,12 +500,12 @@ bmediatR <- function(y, M, X,
   diag(sigma7) <- diag(sigma7) + lambda[7]/w_M
   diag(sigma8) <- diag(sigma8) + lambda[8]/w_M
   
-  if (!sigma5_equal_sigma1 | !calc_ln_prob_data[1]){
+  if (!sigma5_equal_sigma1 | !calc_ln_prob_data[1]) {
     sigma5 <- crossprod(sqrt(lambda[5]*v5)*t(X5))
     diag(sigma5) <- diag(sigma5) + lambda[5]/w_M
   }
   
-  if (!sigma6_equal_sigma3 | !calc_ln_prob_data[3]){
+  if (!sigma6_equal_sigma3 | !calc_ln_prob_data[3]) {
     sigma6 <- crossprod(sqrt(lambda[6]*v6)*t(X6))
     diag(sigma6) <- diag(sigma6) + lambda[6]/w_M
   }
@@ -543,31 +540,31 @@ bmediatR <- function(y, M, X,
       w_M_subset <- w_M[index]
       
       #cholesky matrices for H1,H3,H5-H8 non-missing observations (do not depend on m)
-      if (calc_ln_prob_data[1]){sigma1_chol_subset <- chol(sigma1[index,index])}
-      if (calc_ln_prob_data[3]){sigma3_chol_subset <- chol(sigma3[index,index])}
-      if (calc_ln_prob_data[7]){sigma7_chol_subset <- chol(sigma7[index,index])}
-      if (calc_ln_prob_data[8]){sigma8_chol_subset <- chol(sigma8[index,index])}
+      if (calc_ln_prob_data[1]) { sigma1_chol_subset <- chol(sigma1[index,index]) }
+      if (calc_ln_prob_data[3]) { sigma3_chol_subset <- chol(sigma3[index,index]) }
+      if (calc_ln_prob_data[7]) { sigma7_chol_subset <- chol(sigma7[index,index]) }
+      if (calc_ln_prob_data[8]) { sigma8_chol_subset <- chol(sigma8[index,index]) }
       
-      if (sigma5_equal_sigma1 & calc_ln_prob_data[1]){
+      if (sigma5_equal_sigma1 & calc_ln_prob_data[1]) {
         sigma5_chol_subset <- sigma1_chol_subset
-      } else if (calc_ln_prob_data[5]){
+      } else if (calc_ln_prob_data[5]) {
         sigma5_chol_subset <- chol(sigma5[index,index])
       }
       
-      if (sigma6_equal_sigma3 & calc_ln_prob_data[3]){
+      if (sigma6_equal_sigma3 & calc_ln_prob_data[3]) {
         sigma6_chol_subset <- sigma3_chol_subset
-      } else if (calc_ln_prob_data[6]){
+      } else if (calc_ln_prob_data[6]) {
         sigma6_chol_subset <- chol(sigma6[index,index])
       }
       
       #compute H1 and H3 outside of the mediator loop (invariant)
-      if (calc_ln_prob_data[1]){ln_prob_data1 <- bmediatR:::dmvt_chol(y_subset, sigma_chol=sigma1_chol_subset, df = kappa[1])}
-      if (calc_ln_prob_data[3]){ln_prob_data3 <- bmediatR:::dmvt_chol(y_subset, sigma_chol=sigma3_chol_subset, df = kappa[3])}
+      if (calc_ln_prob_data[1]) { ln_prob_data1 <- bmediatR:::dmvt_chol(y_subset, sigma_chol=sigma1_chol_subset, df = kappa[1]) }
+      if (calc_ln_prob_data[3]) { ln_prob_data3 <- bmediatR:::dmvt_chol(y_subset, sigma_chol=sigma3_chol_subset, df = kappa[3]) }
       
       #iterate over mediators
-      for (i in missing_m[[b]]$cols){
+      for (i in missing_m[[b]]$cols) {
         counter <- counter + 1
-        if (counter%%1000==0 & verbose){print(paste(counter, "of", ncol(M)), quote=F)}
+        if (counter%%1000==0 & verbose) { print(paste(counter, "of", ncol(M)), quote=F) }
         
         #set current mediator non-missing observations
         m_subset <- M[index,i]
@@ -583,19 +580,19 @@ bmediatR <- function(y, M, X,
         diag(sigma2_subset) <- diag(sigma2_subset) + lambda[2]/w_y_subset
         diag(sigma4_subset) <- diag(sigma4_subset) + lambda[4]/w_y_subset
         
-        if (calc_ln_prob_data[2]){sigma2_chol_subset <- chol(sigma2_subset)}
-        if (calc_ln_prob_data[4]){sigma4_chol_subset <- chol(sigma4_subset)}
+        if (calc_ln_prob_data[2]) { sigma2_chol_subset <- chol(sigma2_subset) }
+        if (calc_ln_prob_data[4]) { sigma4_chol_subset <- chol(sigma4_subset) }
         
         #compute likelihoods for H1-H8
-        if (calc_ln_prob_data[1]){ln_prob_data[i,1] <- ln_prob_data1}
-        if (calc_ln_prob_data[3]){ln_prob_data[i,3] <- ln_prob_data3}
+        if (calc_ln_prob_data[1]) { ln_prob_data[i,1] <- ln_prob_data1 }
+        if (calc_ln_prob_data[3]) { ln_prob_data[i,3] <- ln_prob_data3 }
         
-        if (calc_ln_prob_data[2]){ln_prob_data[i,2] <- bmediatR:::dmvt_chol(y_subset, sigma_chol=sigma2_chol_subset, df = kappa[2])}
-        if (calc_ln_prob_data[4]){ln_prob_data[i,4] <- bmediatR:::dmvt_chol(y_subset, sigma_chol=sigma4_chol_subset, df = kappa[4])}
-        if (calc_ln_prob_data[5]){ln_prob_data[i,5] <- bmediatR:::dmvt_chol(m_subset, sigma_chol=sigma5_chol_subset, df = kappa[5])}
-        if (calc_ln_prob_data[6]){ln_prob_data[i,6] <- bmediatR:::dmvt_chol(m_subset, sigma_chol=sigma6_chol_subset, df = kappa[6])}
-        if (calc_ln_prob_data[7]){ln_prob_data[i,7] <- bmediatR:::dmvt_chol(m_subset, sigma_chol=sigma7_chol_subset, df = kappa[7])}
-        if (calc_ln_prob_data[8]){ln_prob_data[i,8] <- bmediatR:::dmvt_chol(m_subset, sigma_chol=sigma8_chol_subset, df = kappa[8])}
+        if (calc_ln_prob_data[2]) { ln_prob_data[i,2] <- bmediatR:::dmvt_chol(y_subset, sigma_chol=sigma2_chol_subset, df = kappa[2]) }
+        if (calc_ln_prob_data[4]) { ln_prob_data[i,4] <- bmediatR:::dmvt_chol(y_subset, sigma_chol=sigma4_chol_subset, df = kappa[4]) }
+        if (calc_ln_prob_data[5]) { ln_prob_data[i,5] <- bmediatR:::dmvt_chol(m_subset, sigma_chol=sigma5_chol_subset, df = kappa[5]) }
+        if (calc_ln_prob_data[6]) { ln_prob_data[i,6] <- bmediatR:::dmvt_chol(m_subset, sigma_chol=sigma6_chol_subset, df = kappa[6]) }
+        if (calc_ln_prob_data[7]) { ln_prob_data[i,7] <- bmediatR:::dmvt_chol(m_subset, sigma_chol=sigma7_chol_subset, df = kappa[7]) }
+        if (calc_ln_prob_data[8]) { ln_prob_data[i,8] <- bmediatR:::dmvt_chol(m_subset, sigma_chol=sigma8_chol_subset, df = kappa[8]) }
       }
     }
   }
@@ -628,7 +625,7 @@ bmediatR <- function(y, M, X,
   output$ln_prob_data <- ln_prob_data
   output <- output[c("ln_prob_data", "ln_post_c", "ln_post_odds", "ln_prior_c", "ln_prior_odds", "ln_ml")]
   
-  if (verbose) {print("Done", quote=F)}
+  if (verbose) { print("Done", quote=F) }
   output
 }
 
