@@ -227,7 +227,7 @@ align_data <- function(y, M, X,
   overlapping_samples <- Reduce(f = intersect, x = list(names(y), 
                                                         rownames(X),
                                                         rownames(Z_y), 
-                                                        names(w_y))
+                                                        names(w_y)))
   
   if (length(overlapping_samples) == 0 | !any(overlapping_samples %in% unique(c(rownames(M), rownames(Z_M), names(w_M))))) {
     stop("No samples overlap. Check rownames of M, X, Z (or Z_y and Z_M) and names of y and w (or w_y and w_M).", call. = FALSE)
