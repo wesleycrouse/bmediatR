@@ -633,13 +633,13 @@ bmediatR <- function(y, M, X,
 align_data_v0 <- function(y, M, X, Z, w,
                           verbose = TRUE) {
   
+  # M can have NAs
   overlapping_samples <- Reduce(f = intersect, x = list(names(y), 
-                                                        rownames(M),
                                                         rownames(X),
                                                         rownames(Z), 
                                                         names(w)))
   
-  if (length(overlapping_samples) == 0) {
+  if (length(overlapping_samples) == 0 | !any(overlapping_samples %in% rownames(M))) {
     stop("No samples overlap. Check rownames of M, X, Z and names of y and w.", call. = FALSE)
   } else if (verbose) {
     writeLines(text = c("Number of overlapping samples:", length(overlapping_samples)))
