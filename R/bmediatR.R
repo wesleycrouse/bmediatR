@@ -217,32 +217,97 @@ return_preset_odds_index <- function(odds_type = c("mediation",
   index_list
 }
 
-## Function to optionally align data
-align_data <- function(y, M, X, 
-                       Z_y, Z_M,
-                       w_y, w_M,
-                       verbose = TRUE) {
+## Function to process data and optionally align them
+process_data <- function(y, M, X, 
+                         Z = NULL, Z_y = NULL, Z_M = NULL,
+                         w = NULL, w_y = NULL, w_M = NULL,
+                         align_data = TRUE,
+                         verbose = TRUE) {
   
-  # M and Z_M can have NAs
-  overlapping_samples <- Reduce(f = intersect, x = list(names(y), 
-                                                        rownames(X),
-                                                        rownames(Z_y), 
-                                                        names(w_y)))
+  # Ensure y is a vector
+  if (is.matrix(y)) { y <- y[,1] }
+
+  # Ensure X, M, Z, Z_y, and Z_M are matrices
+  X <- as.matrix(X)
+  M <- as.matrix(M)
+  if (!is.null(Z)) { Z <- as.matrix(Z) }
+  if (!is.null(Z_y)) { Z_y <- as.matrix(Z_y) }
+  if (!is.null(Z_M)) { Z_M <- as.matrix(Z_M) }
   
-  if (length(overlapping_samples) == 0 | !any(overlapping_samples %in% unique(c(rownames(M), rownames(Z_M), names(w_M))))) {
-    stop("No samples overlap. Check rownames of M, X, Z (or Z_y and Z_M) and names of y and w (or w_y and w_M).", call. = FALSE)
-  } else if (verbose) {
-    writeLines(text = c("Number of overlapping samples:", length(overlapping_samples)))
+  # Process covariate matrices
+  if (is.null(Z_y)) { Z_y <- matrix(NA, length(y), 0); rownames(Z_y) <- names(y) }
+  if (is.null(Z_M)) { Z_M <- matrix(NA, nrow(M), 0); rownames(Z_M) <- rownames(M) }
+  
+  if (!is.null(Z)) {
+    if (align_data) {
+      Z_y <- cbind(Z, Z_y[rownames(Z),])
+      Z_M <- cbind(Z, Z_M[rownames(Z),])
+    } else {
+      Z_y <- cbind(Z, Z_y)
+      Z_M <- cbind(Z, Z_M)
+    }
   }
   
+  # Process weight vectors
+  if (is.null(w)) {
+    if (is.null(w_y)) { w_y <- rep(1, length(y)); names(w_y) <- names(y) }
+    if (is.null(w_M)) { w_M <- rep(1, nrow(M)); names(w_M) <- rownames(M) }
+  } else {
+    w_y <- w_M <- w
+  }
+  
+  if (align_data) {
+    # M and Z_M can have NAs
+    overlapping_samples <- Reduce(f = intersect, x = list(names(y), 
+                                                          rownames(X),
+                                                          rownames(Z_y), 
+                                                          names(w_y)))
+    
+    if (length(overlapping_samples) == 0 | !any(overlapping_samples %in% unique(c(rownames(M), rownames(Z_M), names(w_M))))) {
+      stop("No samples overlap. Check rownames of M, X, Z (or Z_y and Z_M) and names of y and w (or w_y and w_M).", call. = FALSE)
+    } else if (verbose) {
+      writeLines(text = c("Number of overlapping samples:", length(overlapping_samples)))
+    }
+    # Ordering
+    y <- y[overlapping_samples]
+    M <- M[overlapping_samples,, drop = FALSE]
+    X <- X[overlapping_samples,, drop = FALSE]
+    Z_y <- Z_y[overlapping_samples,, drop = FALSE]
+    Z_M <- Z_M[overlapping_samples,, drop = FALSE]
+    w_y <- w_y[overlapping_samples]
+    w_M <- w_M[overlapping_samples]
+  }
+  
+  # Drop observations with missing y or X and update n
+  complete_y <- !is.na(y)
+  complete_X <- !apply(is.na(X), 1, any)
+  
+  y <- y[complete_y & complete_X]
+  M <- M[complete_y & complete_X,, drop = FALSE]
+  X <- X[complete_y & complete_X,, drop = FALSE]
+  Z_y <- Z_y[complete_y & complete_X,, drop = FALSE]
+  Z_M <- Z_M[complete_y & complete_X,, drop = FALSE]
+  w_y <- w_y[complete_y & complete_X]
+  w_M <- w_M[complete_y & complete_X]
+  
+  # Drop columns of Z_y and Z_M that are invariant
+  Z_y_drop <- which(apply(Z_y, 2, function(x) var(x)) == 0)
+  Z_M_drop <- which(apply(Z_M, 2, function(x) var(x)) == 0)
+  if (length(Z_y_drop) > 0) {
+    writeLines(paste("Dropping invariants columns from Z_y:", colnames(Z_y)[Z_y_drop]))
+    Z_y <- Z_y[,-Z_y_drop, drop = FALSE]
+  }
+  if (length(Z_M_drop) > 0) {
+    writeLines(paste("Dropping invariants columns from Z_M:", colnames(Z_M)[Z_M_drop]))
+    Z_M <- Z_M[,-Z_M_drop, drop = FALSE]
+  }
+
   # Return aligned data
-  list(y = y[overlapping_samples],
-       M = M[overlapping_samples,, drop = FALSE],
-       X = X[overlapping_samples,, drop = FALSE],
-       Z_y = Z_y[overlapping_samples,, drop = FALSE],
-       Z_M = Z_M[overlapping_samples,, drop = FALSE],
-       w_y = w_y[overlapping_samples],
-       w_M = w_M[overlapping_samples])
+  list(y = y,
+       M = M,
+       X = X,
+       Z_y = Z_y, Z_M = Z_M,
+       w_y = w_y, w_M = w_M)
 }
 
 #' Bayesian model selection for mediation analysis function 
@@ -316,77 +381,25 @@ bmediatR <- function(y, M, X,
   } else {
     ln_prior_c <- ln_prior_c - matrixStats::logSumExp(ln_prior_c)
   }
-  
-  #ensure y is a vector
-  if (is.matrix(y)) { y <- y[,1] }
-  
-  #dimension of y
-  n <- length(y)
-  
-  #default values for Z, combine design matrices
-  if (is.null(Z)) { Z <- matrix(NA, n, 0); rownames(Z) <- names(y) }
-  if (is.null(Z_y)) { Z_y <- matrix(NA, n, 0); rownames(Z_y) <- names(y) }
-  if (is.null(Z_M)) { Z_M <- matrix(NA, n, 0); rownames(Z_M) <- names(y) }
-  Z_y <- cbind(Z, Z_y)
-  Z_M <- cbind(Z, Z_M)
-  
-  #ensure X, M, Z_y, and Z_M are matrices
-  X <- as.matrix(X)
-  M <- as.matrix(M)
-  Z_y <- as.matrix(Z_y)
-  Z_M <- as.matrix(Z_M)
-  
-  #default values for w
-  if (is.null(w)) {
-    if (is.null(w_y)) { w_y <- rep(1, n); names(w_y) <- names(y) }
-    if (is.null(w_M)) { w_M <- rep(1, n); names(w_M) <- names(y) }
-  } else {
-    w_y <- w
-    w_M <- w
-  }
 
   #optionally align data
-  if (align_data) {
-    aligned_data <- align_data(y = y, M = M, X = X,
-                               Z_y = Z_y, Z_M = Z_M,
-                               w_y = w_y, w_M = w_M, 
-                               verbose = verbose)
-    y <- aligned_data$y
-    M <- aligned_data$M
-    X <- aligned_data$X
-    Z_y <- aligned_data$Z_y
-    Z_M <- aligned_data$Z_M
-    w_y <- aligned_data$w_y
-    w_M <- aligned_data$w_M
-  }
-
-  #drop observations with missing y or X and update n
-  complete_y <- !is.na(y)
-  complete_X <- !apply(is.na(X), 1, any)
+  processed_data <- process_data(y = y, M = M, X = X,
+                                 Z_y = Z_y, Z_M = Z_M,
+                                 w_y = w_y, w_M = w_M, 
+                                 align_data = align_data,
+                                 verbose = verbose)
+  y <- processed_data$y
+  M <- processed_data$M
+  X <- processed_data$X
+  Z_y <- processed_data$Z_y
+  Z_M <- processed_data$Z_M
+  w_y <- processed_data$w_y
+  w_M <- processed_data$w_M
   
-  y <- y[complete_y & complete_X]
-  M <- M[complete_y & complete_X,, drop = FALSE]
-  X <- X[complete_y & complete_X,, drop = FALSE]
-  Z_y <- Z_y[complete_y & complete_X,, drop = FALSE]
-  Z_M <- Z_M[complete_y & complete_X,, drop = FALSE]
-  w_y <- w_y[complete_y & complete_X]
-  w_M <- w_M[complete_y & complete_X]
-  
+  #dimenion of y
   n <- length(y)
   
-  #drop columns of Z_y and Z_M that are invariant
-  Z_y_drop <- which(apply(Z_y, 2, function(x) var(x)) == 0)
-  Z_M_drop <- which(apply(Z_M, 2, function(x) var(x)) == 0)
-  if (length(Z_y_drop) > 0) {
-    writeLines(paste("Dropping invariants columns from Z_y:", colnames(Z_y)[Z_y_drop]))
-    Z_y <- Z_y[,-Z_y_drop]
-  }
-  if (length(Z_M_drop) > 0) {
-    writeLines(paste("Dropping invariants columns from Z_M:", colnames(Z_M)[Z_M_drop]))
-    Z_M <- Z_M[,-Z_M_drop]
-  }
-  
-  #dimension of Z
+  #dimension of Z's
   p_y <- ncol(Z_y)
   p_M <- ncol(Z_M)
   
