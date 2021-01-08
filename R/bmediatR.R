@@ -295,11 +295,15 @@ process_data <- function(y, M, X,
   Z_y_drop <- which(apply(Z_y, 2, function(x) var(x)) == 0)
   Z_M_drop <- which(apply(Z_M, 2, function(x) var(x)) == 0)
   if (length(Z_y_drop) > 0) {
-    writeLines(paste("Dropping invariants columns from Z_y:", colnames(Z_y)[Z_y_drop]))
+    if (verbose) {
+      writeLines(paste("Dropping invariants columns from Z_y:", colnames(Z_y)[Z_y_drop]))
+    }
     Z_y <- Z_y[,-Z_y_drop, drop = FALSE]
   }
   if (length(Z_M_drop) > 0) {
-    writeLines(paste("Dropping invariants columns from Z_M:", colnames(Z_M)[Z_M_drop]))
+    if (verbose) {
+      writeLines(paste("Dropping invariants columns from Z_M:", colnames(Z_M)[Z_M_drop]))
+    }
     Z_M <- Z_M[,-Z_M_drop, drop = FALSE]
   }
 
