@@ -20,7 +20,7 @@ bmediatR_v0(
   ln_prior_c = "complete",
   options_X = list(sum_to_zero = TRUE, center = FALSE, scale = FALSE),
   align_data = TRUE,
-  verbose = T
+  verbose = TRUE
 )
 }
 \arguments{

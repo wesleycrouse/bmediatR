@@ -40,15 +40,15 @@ either as founder strain haplotypes or variant genotypes, though X is generaliza
 
 \item{Z}{DEFAULT: NULL. Design matrix of covariates that influence the outcome and mediator variables. 
 Names or rownames must match to those of y, M, X, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data=FALSE,
-dimensions and order must match across inputs. If Z is provided, it is added interally to Z_y and Z_M.}
+dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.}
 
 \item{Z_y}{DEFAULT: NULL. Design matrix of covariates that influence the outcome variable. 
 Names or rownames must match to those of y, M, X, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
-dimensions and order must match across inputs.}
+dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.}
 
 \item{Z_M}{DEFAULT: NULL. Design matrix of covariates that influence the mediator variables. 
 Names or rownames must match across y, M, X, Z_y, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
-dimensions and order must match across inputs.}
+dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.}
 
 \item{w}{DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis that applies to both 
 y and M. Names must match across y, M, X, Z, Z_y, and Z_M (if provided) when align_data = TRUE. If align_data = FALSE,
