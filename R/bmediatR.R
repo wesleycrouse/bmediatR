@@ -913,8 +913,8 @@ bmediatR_v0 <- function(y, M, X,
                               "-,1,1",
                               "0,-,-", 
                               "1,-,-",
-                              '0,*,-',
-                              '1,*,1')
+                              "0,*,-",
+                              "1,*,1")
   
   #identify batches of M that have the same pattern of missing values
   missing_m <- bmediatR:::batch_cols(M)
@@ -1095,9 +1095,9 @@ estimate_empirical_prior <- function(ln_prob_data,
   }
 
   ln_prior_c <- matrix(ln_prior_c, nrow = 1)
-  colnames(ln_prior_c) <- c("0,0,0", "0,0,1", "0,1,0", "0,1,1",
-                            "1,0,0", "1,0,1", "1,1,0", "1,1,1",
-                            "0,0,*", "0,1,*", "1,0,*", "1,1,*")
+  colnames(ln_prior_c) <- c("0,0,0", "0,1,0", "1,0,0", "1,1,0",
+                            "1,1,0", "0,0,1", "0,1,1", "1,0,1",
+                            "0,*,0", "1,*,0", "0,*,1", "1,*,1")
   ln_prior_c
 }
 
