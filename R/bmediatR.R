@@ -1027,7 +1027,7 @@ bmediatR_v0 <- function(y, M, X,
 #' Calculate empirical priors based on the relationships in the data between X, M, and y
 #'
 #' This function estimates log prior model probabilities that maximize the marginal likelihoods
-#' of the data from a prior run of bmediatR(). 
+#' of the data from a previous run of bmediatR(). 
 #' 
 #' @param ln_prob_data Marginal likelihoods from bmediatR fit.
 #' @param model DEFAULT: "complete". If "complete", the marginal likelihoods evaluating the 
@@ -1035,7 +1035,7 @@ bmediatR_v0 <- function(y, M, X,
 #' as present. A "reactive" mode is currently not supported because of the challenge in
 #' distinguishing the directionality of a relationship.
 #' @export
-#' @examples model_info()
+#' @examples estimate_empirical_prior()
 estimate_empirical_prior <- function(ln_prob_data,
                                      model = c("complete", "partial")) {
   model <- model[1]

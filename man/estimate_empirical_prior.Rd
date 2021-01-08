@@ -16,8 +16,8 @@ distinguishing the directionality of a relationship.}
 }
 \description{
 This function estimates log prior model probabilities that maximize the marginal likelihoods
-of the data from a prior run of bmediatR().
+of the data from a previous run of bmediatR().
 }
 \examples{
-model_info()
+estimate_empirical_prior()
 }
