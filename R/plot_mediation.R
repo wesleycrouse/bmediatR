@@ -76,16 +76,16 @@ plot_posterior_bar <- function(bmediatR_object,
                   "complete med (react)", "other non-med", "partial med (react)")
   names(long_names) <- colnames(post_mat)
   
-  bar_col <- bar_col[c(model_flag[c("0,1,1", "1,1,1", "1,1,0", "1,1,*", "1,0,*")], TRUE)]
+  bar_col <- bar_col[c(model_flag[c("1,0,1", "1,1,1", "1,1,0", "1,*,1", "0,*,1")], TRUE)]
 
   posterior_dat <- exp(bmediatR_object$ln_post_c) %>%
     as.data.frame %>%
     tibble::rownames_to_column(med_var) %>%
     dplyr::rename("partial med" = `1,1,1`,
-                  "complete med" = `0,1,1`,
-                  "co-local" = `1,1,0`,
-                  "partial med (react)" = `1,1,*`,
-                  "complete med (react)" = `1,0,*`)
+                  "complete med" = `1,1,0`,
+                  "co-local" = `1,0,1`,
+                  "partial med (react)" = `1,*,1`,
+                  "complete med (react)" = `0,*,1`)
   
   # Using annotation information
   if (!is.null(med_annot)) {
@@ -186,15 +186,15 @@ plot_prior_bar <- function(bmediatR_object,
                   "complete med (react)", "other non-med", "partial med (react)")
   names(long_names) <- colnames(prior_mat)
   
-  bar_col <- bar_col[c(model_flag[c("0,1,1", "1,1,1", "1,1,0", "1,1,*", "1,0,*")], TRUE)]
-
+  bar_col <- bar_col[c(model_flag[c("1,0,1", "1,1,1", "1,1,0", "1,*,1", "0,*,1")], TRUE)]
+  
   prior_dat <- exp(bmediatR_object$ln_prior_c) %>%
     as.data.frame %>%
     dplyr::rename("partial med" = `1,1,1`,
-                  "complete med" = `0,1,1`,
-                  "co-local" = `1,1,0`,
-                  "partial med (react)" = `1,1,*`,
-                  "complete med (react)" = `1,0,*`)
+                  "complete med" = `1,1,0`,
+                  "co-local" = `1,0,1`,
+                  "partial med (react)" = `1,*,1`,
+                  "complete med (react)" = `0,*,1`)
   
   ## Calculating non-mediation or co-local probability
   prior_dat <- prior_dat %>%
