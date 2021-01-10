@@ -156,18 +156,9 @@ posterior_summary <- function(ln_prob_data,
   ln_ml <- apply(ln_post_c, 1, matrixStats::logSumExp)
   ln_post_c <- ln_post_c - ln_ml
   
-  colnames(ln_post_c) <- c("0,0,0",
-                           "0,1,0",
-                           "1,0,0",
-                           "1,1,0",
-                           "0,0,1",
-                           "0,1,1",
-                           "1,0,1",
-                           "1,1,1",
-                           "0,*,0",
-                           "1,*,0",
-                           "0,*,1",
-                           "1,*,1")
+  colnames(ln_post_c) <- c("0,0,0", "0,1,0", "1,0,0", "1,1,0",
+                           "0,0,1", "0,1,1", "1,0,1", "1,1,1",
+                           "0,*,0", "1,*,0", "0,*,1", "1,*,1")
   rownames(ln_post_c) <- rownames(ln_prob_data)
   
   #compute prior odds for each combination of cases
@@ -568,14 +559,8 @@ bmediatR <- function(y, M, X,
   #object to store likelihoods
   ln_prob_data <- matrix(-Inf, ncol(M), 8)
   rownames(ln_prob_data) <- colnames(M)
-  colnames(ln_prob_data) <- c("-,0,0", 
-                              "-,1,0", 
-                              "-,0,1", 
-                              "-,1,1",
-                              "0,-,-", 
-                              "1,-,-",
-                              '0,*,-',
-                              '1,*,1')
+  colnames(ln_prob_data) <- c("-,0,0", "-,1,0", "-,0,1", "-,1,1",
+                              "0,-,-", "1,-,-", "0,*,-", "1,*,1")
   
   #identify batches of M that have the same pattern of missing values
   missing_m <- bmediatR:::batch_cols(M)
@@ -907,14 +892,8 @@ bmediatR_v0 <- function(y, M, X,
   #object to store likelihoods
   ln_prob_data <- matrix(-Inf, ncol(M), 8)
   rownames(ln_prob_data) <- colnames(M)
-  colnames(ln_prob_data) <- c("-,0,0", 
-                              "-,1,0", 
-                              "-,0,1", 
-                              "-,1,1",
-                              "0,-,-", 
-                              "1,-,-",
-                              "0,*,-",
-                              "1,*,1")
+  colnames(ln_prob_data) <- c("-,0,0", "-,1,0", "-,0,1", "-,1,1",
+                              "0,-,-", "1,-,-", "0,*,-", "1,*,1")
   
   #identify batches of M that have the same pattern of missing values
   missing_m <- bmediatR:::batch_cols(M)
@@ -1096,7 +1075,7 @@ estimate_empirical_prior <- function(ln_prob_data,
 
   ln_prior_c <- matrix(ln_prior_c, nrow = 1)
   colnames(ln_prior_c) <- c("0,0,0", "0,1,0", "1,0,0", "1,1,0",
-                            "1,1,0", "0,0,1", "0,1,1", "1,0,1",
+                            "0,0,1", "0,1,1", "1,0,1", "1,1,1",
                             "0,*,0", "1,*,0", "0,*,1", "1,*,1")
   ln_prior_c
 }
