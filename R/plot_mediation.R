@@ -76,7 +76,7 @@ plot_posterior_bar <- function(bmediatR_object,
                   "complete med (react)", "other non-med", "partial med (react)")
   names(long_names) <- colnames(post_mat)
   
-  bar_col <- bar_col[c(model_flag[c("1,0,1", "1,1,1", "1,1,0", "1,*,1", "0,*,1")], TRUE)]
+  bar_col <- bar_col[c(model_flag[c("1,1,0", "1,1,1", "1,0,1", "1,*,1", "0,*,1")], TRUE)]
 
   posterior_dat <- exp(bmediatR_object$ln_post_c) %>%
     as.data.frame %>%
@@ -186,7 +186,7 @@ plot_prior_bar <- function(bmediatR_object,
                   "complete med (react)", "other non-med", "partial med (react)")
   names(long_names) <- colnames(prior_mat)
   
-  bar_col <- bar_col[c(model_flag[c("1,0,1", "1,1,1", "1,1,0", "1,*,1", "0,*,1")], TRUE)]
+  bar_col <- bar_col[c(model_flag[c("1,1,0", "1,1,1", "1,0,1", "1,*,1", "0,*,1")], TRUE)]
   
   prior_dat <- exp(bmediatR_object$ln_prior_c) %>%
     as.data.frame %>%
