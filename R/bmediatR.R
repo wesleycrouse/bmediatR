@@ -195,7 +195,8 @@ return_preset_odds_index <- function(odds_type = c("mediation",
                                                    "colocal", 
                                                    "mediation_or_colocal",
                                                    "y_depends_x", 
-                                                   "reactive")) {
+                                                   "reactive",
+                                                   "y_depends_m")) {
   
   presets <- list("mediation" = c(4, 8),
                   "partial" = 8,
@@ -203,7 +204,8 @@ return_preset_odds_index <- function(odds_type = c("mediation",
                   "colocal" = 7,
                   "mediation_or_colocal" = c(4, 7, 8),
                   "y_depends_x" = c(4:8, 11, 12),
-                  "reactive" = 9:12)
+                  "reactive" = 9:12,
+                  "y_depends_m" = c(2, 4, 6, 8))
   
   index_list <- presets[odds_type]
   index_list
