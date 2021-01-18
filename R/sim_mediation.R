@@ -221,10 +221,10 @@ sim_cc_qtl <- function(locus_matrix,
                        ...) {
   
   sample_method <- sample_method[1]
+  strains <- rownames(locus_matrix)
   
   ## Imputation for simulation
   if (impute) {
-    strains <- rownames(locus_matrix)
     locus_matrix <- t(apply(locus_matrix, 1, function(x) rmultinom(1, 1, x)))
     rownames(locus_matrix) <- strains
   }
@@ -269,6 +269,7 @@ sim_cc_qtl <- function(locus_matrix,
   var_ratio <- ifelse(qtl_effect_size != 0,
                       c(non_sample_var(Z %*% D %*% M %*% beta)/non_sample_var(beta)),
                       1)
+  
   if (var_ratio != 0) { # Case when more than one allele is observed
     beta <- beta*sqrt(qtl_effect_size)*sqrt(1/var_ratio)
   }
@@ -291,7 +292,7 @@ sim_cc_qtl <- function(locus_matrix,
                                          n = nrow(Z))
     sim_data[,i] <- qtl_predictor + strain_predictor + scaled_resid
   }
-  
+
   colnames(sim_data) <- paste(sim_label, 1:ncol(sim_data), sep = "_")
   rownames(sim_data) <- paste(rep(strains, each = num_replicates), 1:num_replicates, sep = "_")
   
