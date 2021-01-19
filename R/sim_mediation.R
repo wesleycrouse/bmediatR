@@ -75,6 +75,7 @@ sim_cc_data <- function(cc_genoprobs,
   for (i in 1:num_sim) {
     this_sim <- sim_cc_qtl(num_replicates = num_replicates,
                            M = M,
+                           beta = beta,
                            sample_method = sample_method,
                            num_alleles = num_alleles, 
                            num_founders = num_founders,
