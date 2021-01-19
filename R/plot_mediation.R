@@ -144,9 +144,10 @@ plot_posterior_bar <- function(bmediatR_object,
   if (add_number_labels) {
     p <- p + geom_text(data = posterior_dat %>% 
                          dplyr::filter((!!as.symbol(med_var)) == mediator_id), 
-                       aes(symbol, post_p, group = model, label = round(post_p, digits = num_dig)), 
+                       aes(symbol, post_p + 0.03, group = model, label = round(post_p, digits = num_dig), col = model), 
                        position = position_dodge(width = 0.9),
-                       size = label_size)
+                       size = label_size) +
+      ggplot2::scale_color_manual(values = bar_col)
   }
   
   p
@@ -238,10 +239,11 @@ plot_prior_bar <- function(bmediatR_object,
       ggplot2::geom_hline(yintercept = c(0, 1), col = "gray", linetype = "dashed")
   }
   if (add_number_labels) {
-    p <- p + geom_text(data = prior_dat, 
-                       aes(case, prior_p, group = model, label = round(prior_p, digits = num_dig)), 
+    p <- p + geom_text(data = prior_dat,
+                       aes(symbol, prior_p + 0.03, group = model, label = round(post_p, digits = num_dig), col = model), 
                        position = position_dodge(width = 0.9),
-                       size = label_size)
+                       size = label_size) +
+      ggplot2::scale_color_manual(values = bar_col)
   }
 
   p
