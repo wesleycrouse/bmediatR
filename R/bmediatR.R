@@ -711,9 +711,9 @@ bmediatR <- function(y, M, X,
 #' dimensions and order must match across inputs. A common use would be for an analysis of strain means, where y and M
 #' are summarized from a different number of individuals per strain. w_M is a vector of the number of individuals per strain use to 
 #' measure M. If no w_M (or w) is given, observations are equally weighted as 1s for M.
-#' @param tau_sq_mu DEFAULT: 1000. Variance component for the intercept. The DEFAULT represents a diffuse prior, analagous to 
+#' @param tau_sq_mu DEFAULT: 1000. Variance component for the intercept. The DEFAULT represents a diffuse prior, analogous to 
 #' a fixed effect term.
-#' @param tau_sq_Z DEFAULT: 1000. Variance component for the covariates encoded in Z. The DEFAULT represents a diffuse prior, analagous 
+#' @param tau_sq_Z DEFAULT: 1000. Variance component for the covariates encoded in Z. The DEFAULT represents a diffuse prior, analogous 
 #' to fixed effect terms.
 #' @param phi_sq_X DEFAULT: c(NA,NA,1,0.5,NA,1,NA,0.5). Each element represents a hyper prior on the relationship of X with M or Y, 
 #' corresponding to the eight hypotheses described in the output of model_info(). Each scalar represents the proportion of variance explained (PVE)
@@ -1082,3 +1082,337 @@ estimate_empirical_prior <- function(ln_prob_data,
   ln_prior_c
 }
 
+#' Bayesian model selection for mediation analysis function 
+#'
+#' This function takes an outcome (y), candidate mediators (M), and a driver as a design matrix (X) to perform a 
+#' Bayesian model selection analysis for mediation.
+#' 
+#' @param y Vector or single column matrix of an outcome variable. Single outcome variable expected. 
+#' Names or rownames must match across M, X, Z, Z_y, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs.
+#' @param M Vector or matrix of mediator variables. Multiple mediator variables are supported. 
+#' Names or rownames must match across y, X, Z, Z_y, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs.
+#' @param X Design matrix of the driver. Names or rownames must match across y, M, Z, Z_y, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. 
+#' If align_data = FALSE, dimensions and order must match across inputs. One common application is for X to represent genetic information at a QTL, 
+#' either as founder strain haplotypes or variant genotypes, though X is generalizable to other types of variables.
+#' @param Z DEFAULT: NULL. Design matrix of covariates that influence the outcome and mediator variables. 
+#' Names or rownames must match to those of y, M, X, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data=FALSE,
+#' dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.
+#' @param Z_y DEFAULT: NULL. Design matrix of covariates that influence the outcome variable. 
+#' Names or rownames must match to those of y, M, X, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.
+#' @param Z_M DEFAULT: NULL. Design matrix of covariates that influence the mediator variables. 
+#' Names or rownames must match across y, M, X, Z_y, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.
+#' @param w DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis that applies to both 
+#' y and M. Names must match across y, M, X, Z, Z_y, and Z_M (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs. A common use would be for an analysis of strain means, where w 
+#' is a vector of the number of individuals per strain. If no w, w_y, or w_M is given, observations are equally weighted as 1s for y and M. 
+#' If w is provided, it supercedes w_y and w_M.
+#' @param w_y DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis, specific to the measurement
+#' of y. Names must match across y, M, X, Z, Z_y, Z_M, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs. A common use would be for an analysis of strain means, where y and M
+#' are summarized from a different number of individuals per strain. w_y is a vector of the number of individuals per strain used to
+#' measure y. If no w_y (or w) is given, observations are equally weighted as 1s for y.
+#' @param w_M DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis, specific to the measurement 
+#' of M. Names must match across y, M, X, Z, Z_y, Z_M, and w_y (if provided) when align_data = TRUE. If align_data = FALSE,
+#' dimensions and order must match across inputs. A common use would be for an analysis of strain means, where y and M
+#' are summarized from a different number of individuals per strain. w_M is a vector of the number of individuals per strain use to 
+#' measure M. If no w_M (or w) is given, observations are equally weighted as 1s for M.
+#' @param kappa DEFAULT: c(0.001, 0.001). Shape hyperparameters for the precisions of m and y. The DEFAULT represents uninformative priors on the precisions,
+#' in combination with the default prior for lambda.
+#' @param lambda DEFAULT: c(0.001, 0.001). Rate hyperparameters for the precisions of m and y. The DEFAULT represents uninformative priors on the precisions,
+#' in combination with the default prior for kappa.  
+#' @param tau_sq_mu DEFAULT: c(1000, 1000). Variance components for the intercepts mu_m and mu_y. The DEFAULT represents diffuse priors, analogous to 
+#' fixed effect terms.
+#' @param tau_sq_Z DEFAULT: c(1000, 1000). Variance components for the covariates encoded in Z_m and Z_y. The DEFAULT represents diffuse priors, analogous 
+#' to fixed effect terms.
+#' @param phi_sq DEFAULT: c(1, 1, 1). Each element of (a, b, c) represents one of the relationships being evaluated for mediation, 
+#' specifically the ratio of signal to noise. a is the effect of X on M, b is the effect of M on y, and c is the effect of X on y. 
+#' The DEFAULT represents relationships that explain 50% of the variation in the outcome variable.
+#' @param ln_prior_c DEFAULT: "complete". The prior log case probabilities. See model_info() for description of likelihoods and their
+#' combinations into cases. Simplified pre-set options are available, including "complete", "partial", and "reactive".
+#' @param options_X DEFAULT: list(sum_to_zero = TRUE, center = FALSE, scale = FALSE). Optional transformations for the X design matrix. Sum_to_zero imposes
+#' a sum-to-zero contrast on the columns of X. Center sets the mean of each column to 0. Scale sets the variance of each column to 1.
+#' @param align_data DEFAULT: TRUE. If TRUE, expect vector and matrix inputes to have names and rownames, respectively. The overlapping data
+#' will then be aligned, allowing the user to not have to reduce data to overlapping samples and order them.
+#' @export
+#' @examples bmediatR()
+bmediatR_scratch <- function(y, M, X, 
+                     Z = NULL, Z_y = NULL, Z_M = NULL,
+                     w = NULL, w_y = NULL, w_M = NULL,
+                     kappa = c(0.001, 0.001), 
+                     lambda = c(0.001, 0.001),
+                     tau_sq_mu = c(1000, 1000), 
+                     tau_sq_Z = c(1000, 1000),
+                     phi_sq = c(1, 1, 1),
+                     ln_prior_c = "complete",
+                     options_X = list(sum_to_zero = TRUE, center = FALSE, scale = FALSE),
+                     align_data = TRUE,
+                     verbose = TRUE) {
+  
+  #presets for ln_prior_c; 
+  ln_prior_c <- return_ln_prior_c_from_presets(ln_prior_c = ln_prior_c)
+  
+  #ensure ln_prior_c sum to 1 on probability scale
+  if (is.matrix(ln_prior_c)){
+    ln_prior_c <- t(apply(ln_prior_c, 1, function(x){x - matrixStats::logSumExp(x)}))
+  } else {
+    ln_prior_c <- ln_prior_c - matrixStats::logSumExp(ln_prior_c)
+  }
+  
+  #optionally align data
+  processed_data <- process_data(y = y, M = M, X = X,
+                                 Z_y = Z_y, Z_M = Z_M,
+                                 w_y = w_y, w_M = w_M, 
+                                 align_data = align_data,
+                                 verbose = verbose)
+  y <- processed_data$y
+  M <- processed_data$M
+  X <- processed_data$X
+  Z_y <- processed_data$Z_y
+  Z_M <- processed_data$Z_M
+  w_y <- processed_data$w_y
+  w_M <- processed_data$w_M
+  
+  #dimenion of y
+  n <- length(y)
+  
+  #dimension of Z's
+  p_y <- ncol(Z_y)
+  p_M <- ncol(Z_M)
+  
+  #scale y, M, and Z
+  y <- c(scale(y))
+  M <- apply(M, 2, scale)
+  if (p_y > 0) { Z_y <- apply(Z_y, 2, scale) }
+  if (p_M > 0) { Z_M <- apply(Z_M, 2, scale) }
+  
+  #optionally use sum-to-zero contrast for X
+  #recommended when X is a matrix of factors, with a column for every factor level
+  if (options_X$sum_to_zero == TRUE) {
+    C <- sumtozero_contrast(ncol(X))
+    X <- X%*%C
+  }
+  
+  #optionally center and scale X
+  X <- apply(X, 2, scale, center = options_X$center, scale = options_X$scale)
+  
+  #dimension of X
+  d <- ncol(X)
+  
+  #column design matrix for mu
+  ones <- matrix(1, n)
+  
+  #begin Bayesian calculations
+  if (verbose) { print("Initializing", quote = FALSE) }
+  
+  #reformat priors
+  kappa = c(rep(kappa[2], 4), rep(kappa[1], 4))
+  lambda = c(rep(lambda[2], 4), rep(lambda[1], 4))
+  tau_sq_mu = c(rep(tau_sq_mu[2], 4), rep(tau_sq_mu[1], 4))
+  tau_sq_Z = c(rep(tau_sq_Z[2], 4), rep(tau_sq_Z[1], 4))
+  
+  phi_sq_X = c(NA, NA, phi_sq[3], phi_sq[3], NA, phi_sq[1], NA, phi_sq[1])
+  phi_sq_m = c(NA, phi_sq[2], NA, phi_sq[2], NA, NA, NA, NA)
+  phi_sq_y = c(NA, NA, NA, NA, NA, NA, phi_sq[2], phi_sq[2])
+
+  #identify likelihoods that are not supported by the prior
+  #will not compute cholesky or likelihood for these
+  calc_ln_prob_data <- rep(NA, 8) 
+  calc_ln_prob_data[1] <- any(!is.infinite(ln_prior_c[c(1,3,9,10)]))
+  calc_ln_prob_data[2] <- any(!is.infinite(ln_prior_c[c(2,4)]))
+  calc_ln_prob_data[3] <- any(!is.infinite(ln_prior_c[c(5,7,11,12)]))
+  calc_ln_prob_data[4] <- any(!is.infinite(ln_prior_c[c(6,8)]))
+  calc_ln_prob_data[5] <- any(!is.infinite(ln_prior_c[c(1,2,5,6)]))
+  calc_ln_prob_data[6] <- any(!is.infinite(ln_prior_c[c(3,4,7,8)]))
+  calc_ln_prob_data[7] <- any(!is.infinite(ln_prior_c[c(9,11)]))
+  calc_ln_prob_data[8] <- any(!is.infinite(ln_prior_c[c(10,12)]))
+  
+  #likelihood models for all hypothesis
+  #hypotheses encoded by presence (1) or absence (0) of 'X->m, m->y, X->y' edges on the DAG
+  #(*) denotes reverse causation 'm<-y'
+  #H1: '-,0,0' / y does not depend on X or m
+  #H2: '-,1,0' / y depends on m but not X
+  #H3: '-,0,1' / y depends on X but not m
+  #H4: '-,1,1' / y depends on X and m
+  #H5: '0,-,-' / m does not depend on X
+  #H6: '1,-,-' / m depends on X
+  #H7: '0,*,-' / m depends on y but not X
+  #H8: '1,*,-' / m depends on X and y
+  #all include covariates Z
+  
+  #design matrices for H1,H3,H5-H8 complete cases (do not depend on m)
+  X1 <- cbind(ones, Z_y)
+  X3 <- cbind(ones, X, Z_y)
+  X5 <- cbind(ones, Z_M)
+  X6 <- cbind(ones, X, Z_M)
+  X7 <- cbind(X5, y)
+  X8 <- cbind(X6, y)
+  
+  #check if all scale hyperparameters are identical for H1 and H5
+  #implies sigma1 and sigma5 identical, used to reduce computations
+  sigma5_equal_sigma1 <- all(lambda[1]==lambda[5],
+                             tau_sq_mu[1] == tau_sq_mu[5], 
+                             tau_sq_Z[1] == tau_sq_Z[5],
+                             identical(Z_y, Z_M),
+                             identical(w_y, w_M))
+  
+  #check if all scale hyperparameters are identical for H3 and H6
+  #implies sigma3 and sigma6 identical, used to reduce computations
+  sigma6_equal_sigma3 <- all(lambda[3]==lambda[6],
+                             tau_sq_mu[3] == tau_sq_mu[6], 
+                             tau_sq_Z[3] == tau_sq_Z[6],
+                             identical(Z_y, Z_M),
+                             identical(w_y, w_M))
+  
+  #prior variance matrices (diagonal) for H1-H8 
+  v1 <- c(tau_sq_mu[1], rep(tau_sq_Z[1], p_y))
+  v2 <- c(tau_sq_mu[2], rep(tau_sq_Z[2], p_y), phi_sq_m[2])
+  v3 <- c(tau_sq_mu[3], rep(phi_sq_X[3], d), rep(tau_sq_Z[3], p_y))
+  v4 <- c(tau_sq_mu[4], rep(phi_sq_X[4], d), rep(tau_sq_Z[4], p_y), phi_sq_m[4])
+  v7 <- c(tau_sq_mu[7], rep(tau_sq_Z[7], p_M), phi_sq_y[7])
+  v8 <- c(tau_sq_mu[8], rep(phi_sq_X[8], d), rep(tau_sq_Z[8], p_M), phi_sq_y[8])
+  
+  if (!sigma5_equal_sigma1 | !calc_ln_prob_data[1]){
+    v5 <- c(tau_sq_mu[5], rep(tau_sq_Z[5], p_M))
+  }
+  
+  if (!sigma6_equal_sigma3 | !calc_ln_prob_data[3]){
+    v6 <- c(tau_sq_mu[6], rep(phi_sq_X[6], d), rep(tau_sq_Z[6], p_M))
+  }
+  
+  #scale matrices for H1,H3,H5-H8 complete cases (do not depend on m)
+  sigma1 <- crossprod(sqrt(lambda[1]*v1)*t(X1))
+  sigma3 <- crossprod(sqrt(lambda[3]*v3)*t(X3))
+  sigma7 <- crossprod(sqrt(lambda[7]*v7)*t(X7))
+  sigma8 <- crossprod(sqrt(lambda[8]*v8)*t(X8))
+  
+  diag(sigma1) <- diag(sigma1) + lambda[1]/w_y
+  diag(sigma3) <- diag(sigma3) + lambda[3]/w_y
+  diag(sigma7) <- diag(sigma7) + lambda[7]/w_M
+  diag(sigma8) <- diag(sigma8) + lambda[8]/w_M
+  
+  if (!sigma5_equal_sigma1 | !calc_ln_prob_data[1]){
+    sigma5 <- crossprod(sqrt(lambda[5]*v5)*t(X5))
+    diag(sigma5) <- diag(sigma5) + lambda[5]/w_M
+  }
+  
+  if (!sigma6_equal_sigma3 | !calc_ln_prob_data[3]){
+    sigma6 <- crossprod(sqrt(lambda[6]*v6)*t(X6))
+    diag(sigma6) <- diag(sigma6) + lambda[6]/w_M
+  }
+  
+  #object to store likelihoods
+  ln_prob_data <- matrix(-Inf, ncol(M), 8)
+  rownames(ln_prob_data) <- colnames(M)
+  colnames(ln_prob_data) <- c("-,0,0", "-,1,0", "-,0,1", "-,1,1",
+                              "0,-,-", "1,-,-", "0,*,-", "1,*,1")
+  
+  #identify batches of M that have the same pattern of missing values
+  missing_m <- bmediatR:::batch_cols(M)
+  
+  #iterate over batches of M with same pattern of missing values
+  if (verbose) { print("Iterating", quote = FALSE) }
+  counter <- 0
+  
+  for (b in 1:length(missing_m)){
+    #subset to non-missing observations
+    index <- rep(T, length(y))
+    index[missing_m[[b]]$omit] <- FALSE
+    
+    if (any(index)){
+      y_subset <- y[index]
+      w_y_subset <- w_y[index]
+      w_M_subset <- w_M[index]
+      
+      #cholesky matrices for H1,H3,H5-H8 non-missing observations (do not depend on m)
+      if (calc_ln_prob_data[1]) { sigma1_chol_subset <- chol(sigma1[index,index]) }
+      if (calc_ln_prob_data[3]) { sigma3_chol_subset <- chol(sigma3[index,index]) }
+      if (calc_ln_prob_data[7]) { sigma7_chol_subset <- chol(sigma7[index,index]) }
+      if (calc_ln_prob_data[8]) { sigma8_chol_subset <- chol(sigma8[index,index]) }
+      
+      if (sigma5_equal_sigma1 & calc_ln_prob_data[1]) {
+        sigma5_chol_subset <- sigma1_chol_subset
+      } else if (calc_ln_prob_data[5]) {
+        sigma5_chol_subset <- chol(sigma5[index,index])
+      }
+      
+      if (sigma6_equal_sigma3 & calc_ln_prob_data[3]) {
+        sigma6_chol_subset <- sigma3_chol_subset
+      } else if (calc_ln_prob_data[6]) {
+        sigma6_chol_subset <- chol(sigma6[index,index])
+      }
+      
+      #compute H1 and H3 outside of the mediator loop (invariant)
+      if (calc_ln_prob_data[1]) { ln_prob_data1 <- bmediatR:::dmvt_chol(y_subset, sigma_chol=sigma1_chol_subset, df = kappa[1]) }
+      if (calc_ln_prob_data[3]) { ln_prob_data3 <- bmediatR:::dmvt_chol(y_subset, sigma_chol=sigma3_chol_subset, df = kappa[3]) }
+      
+      #iterate over mediators
+      for (i in missing_m[[b]]$cols) {
+        counter <- counter + 1
+        if (counter%%1000==0 & verbose) { print(paste(counter, "of", ncol(M)), quote=F) }
+        
+        #set current mediator non-missing observations
+        m_subset <- M[index,i]
+        
+        #design matrix for H2 and H4 non-missing observations
+        X2_subset <- cbind(X1[index,,drop = FALSE], m_subset)
+        X4_subset <- cbind(X3[index,,drop = FALSE], m_subset)
+        
+        #scale and cholesky matrices for H2 and H4 non-missing observations
+        sigma2_subset <- crossprod(sqrt(lambda[2]*v2)*t(X2_subset))
+        sigma4_subset <- crossprod(sqrt(lambda[4]*v4)*t(X4_subset))
+        
+        diag(sigma2_subset) <- diag(sigma2_subset) + lambda[2]/w_y_subset
+        diag(sigma4_subset) <- diag(sigma4_subset) + lambda[4]/w_y_subset
+        
+        if (calc_ln_prob_data[2]){sigma2_chol_subset <- chol(sigma2_subset)}
+        if (calc_ln_prob_data[4]){sigma4_chol_subset <- chol(sigma4_subset)}
+        
+        #compute likelihoods for H1-H8
+        if (calc_ln_prob_data[1]){ln_prob_data[i,1] <- ln_prob_data1}
+        if (calc_ln_prob_data[3]){ln_prob_data[i,3] <- ln_prob_data3}
+        
+        if (calc_ln_prob_data[2]){ln_prob_data[i,2] <- bmediatR:::dmvt_chol(y_subset, sigma_chol=sigma2_chol_subset, df = kappa[2])}
+        if (calc_ln_prob_data[4]){ln_prob_data[i,4] <- bmediatR:::dmvt_chol(y_subset, sigma_chol=sigma4_chol_subset, df = kappa[4])}
+        if (calc_ln_prob_data[5]){ln_prob_data[i,5] <- bmediatR:::dmvt_chol(m_subset, sigma_chol=sigma5_chol_subset, df = kappa[5])}
+        if (calc_ln_prob_data[6]){ln_prob_data[i,6] <- bmediatR:::dmvt_chol(m_subset, sigma_chol=sigma6_chol_subset, df = kappa[6])}
+        if (calc_ln_prob_data[7]){ln_prob_data[i,7] <- bmediatR:::dmvt_chol(m_subset, sigma_chol=sigma7_chol_subset, df = kappa[7])}
+        if (calc_ln_prob_data[8]){ln_prob_data[i,8] <- bmediatR:::dmvt_chol(m_subset, sigma_chol=sigma8_chol_subset, df = kappa[8])}
+      }
+    }
+  }
+  
+  #compute posterior probabilities for all cases
+  #compute posterior odds for specified combinations of cases
+  #cases encoded by presence (1) or absence (0) of 'X->m, X->m, X->y' edges on the DAG
+  #(*) denotes reverse causation 'm<-y'
+  #c1:  '0,0,0' / H1 and H5
+  #c2:  '0,1,0' / H2 and H5
+  #c3:  '1,0,0' / H1 and H6
+  #c4:  '1,1,0' / H2 and H6 - complete mediation
+  #c5:  '0,0,1' / H3 and H5 
+  #c6:  '0,1,1' / H4 and H5
+  #c7:  '1,0,1' / H3 and H6 - colocalization
+  #c8:  '1,1,1' / H4 and H6 - partial mediation
+  #c9:  '0,*,0' / H1 and H7
+  #c10: '1,*,0' / H1 and H8
+  #c11: '0,*,1' / H3 and H7
+  #c12: '1,*,1' / H3 and H8
+  
+  preset_odds_index <- return_preset_odds_index()
+  output <- posterior_summary(ln_prob_data, ln_prior_c, preset_odds_index)
+  colnames(output$ln_post_odds) <- colnames(output$ln_prior_odds) <- colnames(output$ln_post_odds)
+  
+  #return results
+  output$ln_prior_c <- matrix(ln_prior_c, nrow = 1)
+  colnames(output$ln_prior_c) <- colnames(output$ln_post_c)
+  
+  output$ln_prob_data <- ln_prob_data
+  output <- output[c("ln_prob_data", "ln_post_c", "ln_post_odds", "ln_prior_c", "ln_prior_odds", "ln_ml")]
+  
+  if (verbose) { print("Done", quote = FALSE) }
+  output
+}

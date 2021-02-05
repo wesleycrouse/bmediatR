@@ -1,3 +1,4 @@
+#devtools::install_github("wesleycrouse/bmediatR")
 source("mediation_bf.R")
 
 #load data
