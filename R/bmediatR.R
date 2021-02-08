@@ -391,13 +391,13 @@ process_data <- function(y, M, X,
 #' to fixed effect terms.
 #' @param phi_sq_X DEFAULT: c(NA,NA,1,0.5,NA,1,NA,0.5). Each element represents a hyper prior on the relationship of X with M or Y, 
 #' corresponding to the eight hypotheses described in the output of model_info(). Each scalar represents the proportion of variance explained (PVE)
-#' by the relationship, specifically as odds, so 1 represents 50% PVE.
+#' by the relationship, specifically as odds, so 1 represents 50\% PVE.
 #' @param phi_sq_m DEFAULT: c(NA,1,NA,0.5,NA,NA,NA,NA). Each element represents a hyper prior on the relationship of M with Y, 
 #' corresponding to the eight hypotheses described in the output of model_info(). Each scalar represents the proportion of variance explained (PVE)
-#' by the relationship, specifically as odds, so 1 represents 50% PVE.
+#' by the relationship, specifically as odds, so 1 represents 50\% PVE.
 #' @param phi_sq_y DEFAULT: c(NA,NA,NA,NA,NA,NA,1,0.5). Each element represents a hyper prior on the relationship of Y with M, 
 #' corresponding to the eight hypotheses described in the output of model_info(). Each scalar represents the proportion of variance explained (PVE)
-#' by the relationship, specifically as odds, so 1 represents 50% PVE.
+#' by the relationship, specifically as odds, so 1 represents 50\% PVE.
 #' @param ln_prior_c DEFAULT: "complete". The prior log case probabilities. See model_info() for description of likelihoods and their
 #' combinations into cases. Simplified pre-set options are available, including "complete", "partial", and "reactive".
 #' @param align_data DEFAULT: TRUE. If TRUE, expect vector and matrix inputes to have names and rownames, respectively. The overlapping data
