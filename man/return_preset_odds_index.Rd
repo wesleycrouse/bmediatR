@@ -6,7 +6,7 @@
 \usage{
 return_preset_odds_index(
   odds_type = c("mediation", "partial", "complete", "colocal", "mediation_or_colocal",
-    "y_depends_x", "reactive")
+    "y_depends_x", "reactive", "y_depends_m")
 )
 }
 \arguments{
