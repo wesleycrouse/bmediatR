@@ -82,7 +82,7 @@ to fixed effect terms.}
 
 \item{phi_sq}{DEFAULT: c(1, 1, 1). Each element of (a, b, c) represents one of the relationships being evaluated for mediation, 
 specifically the ratio of signal to noise. a is the effect of X on M, b is the effect of M on y, and c is the effect of X on y. 
-The DEFAULT represents relationships that explain 50% of the variation in the outcome variable.}
+The DEFAULT represents relationships that explain 50\% of the variation in the outcome variable.}
 
 \item{ln_prior_c}{DEFAULT: "complete". The prior log case probabilities. See model_info() for description of likelihoods and their
 combinations into cases. Simplified pre-set options are available, including "complete", "partial", and "reactive".}
