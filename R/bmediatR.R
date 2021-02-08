@@ -569,7 +569,7 @@ bmediatR_v0 <- function(y, M, X,
   ln_prob_data <- matrix(-Inf, ncol(M), 8)
   rownames(ln_prob_data) <- colnames(M)
   colnames(ln_prob_data) <- c("-,0,0", "-,1,0", "-,0,1", "-,1,1",
-                              "0,-,-", "1,-,-", "0,*,-", "1,*,1")
+                              "0,-,-", "1,-,-", "0,*,-", "1,*,-")
   
   #identify batches of M that have the same pattern of missing values
   missing_m <- bmediatR:::batch_cols(M)
@@ -982,7 +982,7 @@ bmediatR <- function(y, M, X,
   ln_prob_data <- matrix(-Inf, ncol(M), 8)
   rownames(ln_prob_data) <- colnames(M)
   colnames(ln_prob_data) <- c("-,0,0", "-,1,0", "-,0,1", "-,1,1",
-                              "0,-,-", "1,-,-", "0,*,-", "1,*,1")
+                              "0,-,-", "1,-,-", "0,*,-", "1,*,-")
   
   #identify batches of M that have the same pattern of missing values
   missing_m <- bmediatR:::batch_cols(M)
