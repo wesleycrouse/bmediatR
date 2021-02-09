@@ -64,6 +64,7 @@ get_perm_pval <- function(y, M, X, Z = NULL, w = NULL,
                           verbose = FALSE,
                           ...) {
   
+  model_type <- model_type[1]
   actual_po <- bmediatR(y = y, M = M, X = X, Z = Z, w = w,
                         ln_prior_c = ln_prior_c,
                         verbose = verbose,
