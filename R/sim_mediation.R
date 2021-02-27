@@ -1,34 +1,35 @@
-#' Simulate Collaborative Cross (CC) data from realized CC genomes
+#' Simulate multiparental population (MPP) data from realized genomes
 #'
-#' This function takes qtl2 formatted genoprobs of CC mice and simulates outcomes/mediators driven by QTL.
+#' This function takes qtl2 formatted genoprobs from an MPP population (e.g., CC or DO) and simulates 
+#' outcomes driven by QTL.
 #'
-#' @param cc_genoprobs A qtl2 formatted genoprobs object for CC mice. 
-#' @param cc_map A qtl2 formatted map object that corresponds to the genoprobs.
+#' @param genoprobs A qtl2 formatted genoprobs object from qtl2. 
+#' @param map A qtl2 formatted map object that corresponds to the genoprobs.
 #' @param num_replicates DEFAULT: 1. The number of strain replicates to use.
 #' @param num_sim DEFAULT: 1. The number of simulated outcomes to produce.
 #' @param qtl_effect_size DEFAULT = 0.1. The proportion of variation in the simulated outcomes
 #' explained by the QTL.
 #' @export
-#' @examples sim_cc_data()
-sim_cc_data <- function(cc_genoprobs, 
-                        cc_map,
-                        qtl_effect_size = 0.1,
-                        strain_effect_size = 0,
-                        locus = NULL, 
-                        vary_locus = TRUE,
-                        num_replicates = 1, 
-                        num_sim = 1,
-                        M_ID = NULL,
-                        sample_method = c("uniform", "crp"),
-                        num_alleles = 8, 
-                        num_founders = 8,
-                        beta = NULL,
-                        impute = TRUE,
-                        sim_label = "sim_m",
-                        return_means = TRUE) {
+#' @examples sim_mpp_data()
+sim_mpp_data <- function(genoprobs, 
+                         map,
+                         qtl_effect_size = 0.1,
+                         strain_effect_size = 0,
+                         locus = NULL, 
+                         vary_locus = TRUE,
+                         num_replicates = 1, 
+                         num_sim = 1,
+                         M_ID = NULL,
+                         sample_method = c("uniform", "crp"),
+                         num_alleles = 8, 
+                         num_founders = 8,
+                         beta = NULL,
+                         impute = TRUE,
+                         sim_label = "sim_m",
+                         return_means = TRUE) {
   
   sample_method <- sample_method[1]
-  num_strains <- dim(cc_genoprobs[[1]])[1]
+  num_strains <- dim(genoprobs[[1]])[1]
   
   original_effects <- list(qtl_effect_size = qtl_effect_size,
                            strain_effect_size = strain_effect_size)
@@ -36,10 +37,10 @@ sim_cc_data <- function(cc_genoprobs,
   ############ Scaling effects
   noise_effect_size <- (1 - qtl_effect_size - strain_effect_size)
   reduced_noise_effect_size <- noise_effect_size/num_replicates
-  s <- 1/min(c(qtl_effect_size, strain_effect_size, reduced_noise_effect_size)[c(qtl_effect_size, strain_effect_size, reduced_noise_effect_size) != 0])
-  qtl_effect_size <- s * qtl_effect_size
-  strain_effect_size <- s * strain_effect_size
-  noise_effect_size <- s * noise_effect_size
+  scale_factor <- 1/sum(c(qtl_effect_size, strain_effect_size, reduced_noise_effect_size))
+  qtl_effect_size <- scale_factor * qtl_effect_size
+  strain_effect_size <- scale_factor * strain_effect_size
+  noise_effect_size <- scale_factor * noise_effect_size
   
   ## Number of individuals
   num_ind <- ifelse(return_means, num_strains, num_strains * num_replicates)
@@ -50,7 +51,7 @@ sim_cc_data <- function(cc_genoprobs,
   }
   
   ## Sampling loci
-  loci <- unlist(lapply(cc_genoprobs, function(x) dimnames(x)[[3]]))
+  loci <- unlist(lapply(genoprobs, function(x) dimnames(x)[[3]]))
   if (is.null(locus)) {
     locus <- sample(loci, size = ifelse(vary_locus, num_sim, 1), replace = TRUE)
     if (vary_locus) {
@@ -73,20 +74,20 @@ sim_cc_data <- function(cc_genoprobs,
 
   sim_matrix <- matrix(NA, nrow = num_ind, ncol = num_sim)
   for (i in 1:num_sim) {
-    this_sim <- sim_cc_qtl(num_replicates = num_replicates,
-                           M = M,
-                           beta = beta,
-                           sample_method = sample_method,
-                           num_alleles = num_alleles, 
-                           num_founders = num_founders,
-                           qtl_effect_size = qtl_effect_size, 
-                           strain_effect_size = strain_effect_size,
-                           noise_effect_size = noise_effect_size,
-                           impute = impute,
-                           locus_matrix = qtl2::pull_genoprobpos(genoprobs = cc_genoprobs, marker = locus[locus_index[i]]),
-                           return_means = return_means,
-                           num_sim = 1,
-                           sim_label = sim_label)
+    this_sim <- sim_mpp_qtl(num_replicates = num_replicates,
+                            M = M,
+                            beta = beta,
+                            sample_method = sample_method,
+                            num_alleles = num_alleles, 
+                            num_founders = num_founders,
+                            qtl_effect_size = qtl_effect_size, 
+                            strain_effect_size = strain_effect_size,
+                            noise_effect_size = noise_effect_size,
+                            impute = impute,
+                            locus_matrix = qtl2::pull_genoprobpos(genoprobs = cc_genoprobs, marker = locus[locus_index[i]]),
+                            return_means = return_means,
+                            num_sim = 1,
+                            sim_label = sim_label)
     sim_matrix[,i] <- this_sim$data
     if (i == 1) {
       rownames_holder <- rownames(this_sim$data)
@@ -95,7 +96,7 @@ sim_cc_data <- function(cc_genoprobs,
   colnames(sim_matrix) <- paste(sim_label, 1:num_sim, sep = "_")
   rownames(sim_matrix) <- rownames_holder
   
-  map_df <- qtl2convert::map_list_to_df(cc_map)
+  map_df <- qtl2convert::map_list_to_df(map)
 
   return(list(data = sim_matrix,
               locus = as.character(locus),
@@ -113,32 +114,32 @@ sim_cc_data <- function(cc_genoprobs,
                               return_means = return_means)))
 }
 
-#' Simulate Collaborative Cross (CC) data from a specified locus design matrix
+#' Simulate multiparental population (MPP) data from a specified locus design matrix
 #'
-#' This function takes a locus design matrix, i.e., founder haplotypes for CC mice,
-#' to simulate outcomes/mediators driven by its QTL.
+#' This function takes a locus design matrix, e.g., founder haplotypes dosages from CC mice,
+#' to simulate outcomes driven by its QTL.
 #'
-#' @param locus_matrix A design matrix of founder haplotypes at QTL for CC strains. The number of 
-#' rows should correspond to the number of strains. The number of columns is eight for the CC. 
+#' @param locus_matrix A design matrix of founder haplotypes at QTL for MPP founder strains. The number of 
+#' rows should correspond to the number of strains. The number of columns is eight for the CC/DO. 
 #' @param num_replicates DEFAULT: 1. The number of strain replicates to use.
 #' @param num_sim DEFAULT: 1. The number of simulated outcomes to produce.
 #' @param qtl_effect_size DEFAULT = 0.1. The proportion of variation in the simulated outcomes
 #' explained by the QTL.
 #' @export
 #' @examples sim_cc_single_locus()
-sim_cc_single_locus <- function(locus_matrix, 
-                                num_replicates, 
-                                num_sim,
-                                qtl_effect_size = 0.1,
-                                strain_effect_size = 0,
-                                M_ID = NULL,
-                                sample_method = c("uniform", "crp"),
-                                num_alleles = 8, 
-                                num_founders = 8,
-                                beta = NULL,
-                                impute = TRUE,
-                                sim_label = "sim_m",
-                                return_means = TRUE) {
+sim_mpp_single_locus <- function(locus_matrix, 
+                                 num_replicates, 
+                                 num_sim,
+                                 qtl_effect_size = 0.1,
+                                 strain_effect_size = 0,
+                                 M_ID = NULL,
+                                 sample_method = c("uniform", "crp"),
+                                 num_alleles = 8, 
+                                 num_founders = 8,
+                                 beta = NULL,
+                                 impute = TRUE,
+                                 sim_label = "sim_m",
+                                 return_means = TRUE) {
   
   sample_method <- sample_method[1]
   num_strains <- nrow(locus_matrix)
@@ -149,10 +150,10 @@ sim_cc_single_locus <- function(locus_matrix,
   ############ Scaling effects
   noise_effect_size <- (1 - qtl_effect_size - strain_effect_size)
   reduced_noise_effect_size <- noise_effect_size/num_replicates
-  s <- 1/min(c(qtl_effect_size, strain_effect_size, reduced_noise_effect_size)[c(qtl_effect_size, strain_effect_size, reduced_noise_effect_size) != 0])
-  qtl_effect_size <- s * qtl_effect_size
-  strain_effect_size <- s * strain_effect_size
-  noise_effect_size <- s * noise_effect_size
+  scale_factor <- 1/sum(c(qtl_effect_size, strain_effect_size, reduced_noise_effect_size))
+  qtl_effect_size <- scale_factor * qtl_effect_size
+  strain_effect_size <- scale_factor * strain_effect_size
+  noise_effect_size <- scale_factor * noise_effect_size
   
   ## Number of individuals
   num_ind <- ifelse(return_means, num_strains, num_strains * num_replicates)
@@ -168,31 +169,22 @@ sim_cc_single_locus <- function(locus_matrix,
     num_alleles <- length(unique(unlist(strsplit(x = M_ID, split=","))))
   }
   
-  sim_matrix <- matrix(NA, nrow = num_ind, ncol = num_sim)
-  for (i in 1:num_sim) {
-    this_sim <- sim_cc_qtl(num_replicates = num_replicates,
-                           M = M,
-                           beta = beta,
-                           sample_method = sample_method,
-                           num_alleles = num_alleles, 
-                           num_founders = num_founders,
-                           qtl_effect_size = qtl_effect_size, 
-                           strain_effect_size = strain_effect_size,
-                           noise_effect_size = noise_effect_size,
-                           impute = impute,
-                           locus_matrix = locus_matrix,
-                           return_means = return_means,
-                           num_sim = 1,
-                           sim_label = sim_label)
-    sim_matrix[,i] <- this_sim$data
-    if (i == 1) {
-      rownames_holder <- rownames(this_sim$data)
-    }
-  }
-  colnames(sim_matrix) <- paste(sim_label, 1:num_sim, sep = "_")
-  rownames(sim_matrix) <- rownames_holder
+  sim_data <- sim_mpp_qtl(num_replicates = num_replicates,
+                          M = M,
+                          beta = beta,
+                          sample_method = sample_method,
+                          num_alleles = num_alleles, 
+                          num_founders = num_founders,
+                          qtl_effect_size = qtl_effect_size, 
+                          strain_effect_size = strain_effect_size,
+                          noise_effect_size = noise_effect_size,
+                          impute = impute,
+                          locus_matrix = locus_matrix,
+                          return_means = return_means,
+                          num_sim = num_sim,
+                          sim_label = sim_label)
   
-  return(list(data = sim_matrix,
+  return(list(data = sim_data$data,
               locus_matrix = locus_matrix,
               properties=list(num_alleles = num_alleles,
                               sample_method = sample_method,
@@ -205,21 +197,21 @@ sim_cc_single_locus <- function(locus_matrix,
                               return_means = return_means)))
 }
 
-sim_cc_qtl <- function(locus_matrix,
-                       num_replicates,
-                       M = NULL,
-                       sample_method = c("uniform", "crp"),
-                       qtl_effect_size, 
-                       beta = NULL,
-                       strain_effect_size,
-                       noise_effect_size,
-                       num_alleles = 8, 
-                       num_founders = 8,
-                       num_sim,
-                       impute = TRUE, 
-                       return_means = TRUE,
-                       sim_label = "sim_m",
-                       ...) {
+sim_mpp_qtl <- function(locus_matrix,
+                        num_replicates,
+                        M = NULL,
+                        sample_method = c("uniform", "crp"),
+                        qtl_effect_size, 
+                        beta = NULL,
+                        strain_effect_size,
+                        noise_effect_size,
+                        num_alleles = 8, 
+                        num_founders = 8,
+                        num_sim,
+                        impute = TRUE, 
+                        return_means = TRUE,
+                        sim_label = "sim_m",
+                        ...) {
   
   sample_method <- sample_method[1]
   strains <- rownames(locus_matrix)
@@ -246,12 +238,12 @@ sim_cc_qtl <- function(locus_matrix,
   
   ## QTL
   if (qtl_effect_size != 0) {
-    qtl_effect <- sim_qtl_model_and_effects(num_alleles = num_alleles, 
-                                            num_founders = num_founders, 
-                                            M = M,
-                                            sample_method = sample_method,
-                                            beta = beta,
-                                            ...)
+    qtl_effect <- sim_M_and_beta(num_alleles = num_alleles, 
+                                 num_founders = num_founders, 
+                                 M = M,
+                                 sample_method = sample_method,
+                                 beta = beta,
+                                 ...)
   }
   else {
     qtl_effect <- list(M = diag(8),
@@ -266,26 +258,15 @@ sim_cc_qtl <- function(locus_matrix,
     beta <- raw_beta 
   }
   
-  ## Scaling (ZMB)
-  var_ratio <- ifelse(qtl_effect_size != 0,
-                      c(non_sample_var(Z %*% D %*% M %*% beta)/non_sample_var(beta)),
-                      1)
+  ## Scaling to ZDMB, the observed variation in the population
+  ZDMB <- Z %*% D %*% M %*% beta
   
-  if (var_ratio != 0) { # Case when more than one allele is observed
-    beta <- beta*sqrt(qtl_effect_size)*sqrt(1/var_ratio)
+  if (qtl_effect_size != 0) { # Case when more than one allele is observed
+    qtl_predictor <- ZDMB * sqrt(qtl_effect_size/non_sample_var(ZDMB)[1])
   }
   else { # Case when only one allele is observed, should result in a null scan
-    beta <- beta*sqrt(qtl_effect_size)
+    qtl_predictor <- ZDMB
   }
-  
-  scaled_qtl_effects <- calc_qtl_effect(beta = beta,
-                                        M = M,
-                                        D = D,
-                                        Z = Z,
-                                        strain_effect_size = strain_effect_size,
-                                        noise_effect_size = noise_effect_size)
-
-  qtl_predictor <- scaled_qtl_effects$qtl_predictor
   
   sim_data <- matrix(NA, nrow = nrow(Z), ncol = num_sim)
   for (i in 1:num_sim) {
@@ -297,7 +278,10 @@ sim_cc_qtl <- function(locus_matrix,
   colnames(sim_data) <- paste(sim_label, 1:ncol(sim_data), sep = "_")
   rownames(sim_data) <- paste(rep(strains, each = num_replicates), 1:num_replicates, sep = "_")
   
-  if (return_means) {
+  if (num_replicates == 1) {
+    rownames(sim_data) <- strains
+  } 
+  else if (return_means) {
     sim_data <- data.frame(strain = rep(strains, each = num_replicates), sim_data) %>%
       tidyr::gather(key = "sim", value = "phenotype", -strain) %>%
       dplyr::group_by(strain, sim) %>%
@@ -318,12 +302,12 @@ sim_cc_qtl <- function(locus_matrix,
 }
 
 ## From Wes, returns SDP matrix and QTL effects
-sim_qtl_model_and_effects <- function(num_alleles = 8, 
-                                      num_founders = 8, 
-                                      M = NULL,
-                                      sample_method = c("uniform", "crp"), 
-                                      beta = NULL,
-                                      ...){
+sim_M_and_beta <- function(num_alleles = 8, 
+                           num_founders = 8, 
+                           M = NULL,
+                           sample_method = c("uniform", "crp"), 
+                           beta = NULL,
+                           ...){
   
   sample_method <- sample_method[1]
   if (is.null(M)) {
@@ -404,34 +388,6 @@ non_sample_var <- function(x) {
   var_x
 }
 
-calc_qtl_effect <- function(beta,
-                            M,
-                            D,
-                            Z,
-                            strain_effect_size,
-                            noise_effect_size) {
-  
-  MB <- M %*% beta
-  DMB <- D %*% MB
-  ZDMB <- Z %*% DMB
-  
-  B_effect <- non_sample_var(beta)
-  MB_effect <- non_sample_var(MB)
-  DMB_effect <- non_sample_var(DMB)
-  ZDMB_effect <- non_sample_var(ZDMB)
-  
-  summaries <- c(B_effect, MB_effect, DMB_effect, ZDMB_effect,
-                 B_effect/(B_effect + strain_effect_size + noise_effect_size),
-                 MB_effect/(MB_effect + strain_effect_size + noise_effect_size),
-                 DMB_effect/(DMB_effect + strain_effect_size + noise_effect_size),
-                 ZDMB_effect/(ZDMB_effect + strain_effect_size + noise_effect_size))
-  names(summaries) <- c("B_effect", "MB_effect", "DMB_effect", "ZDMB_effect",
-                        "B_ve", "MB_ve", "DMB_ve", "ZDMB_ve")
-  
-  return(list(qtl_predictor = ZDMB,
-              summaries = summaries))
-}
-
 ## Draws and scales residuals in single function
 calc_scaled_residual <- function(noise_effect_size, n) {
   
@@ -452,11 +408,10 @@ calc_scaled_residual <- function(noise_effect_size, n) {
 #' explained by the mediator.
 #' 
 #' @export
-#' @examples sim_target()
-sim_target <- function(M,
-                       mediator_effect_size = 0.5,
-                       target_to_mediator_var_ratio = 1,
-                       sim_label = "sim_y") {
+#' @examples sim_target_from_mediator()
+sim_target_from_mediator <- function(M,
+                                     mediator_effect_size = 0.5,
+                                     sim_label = "sim_y") {
   
   Y <- matrix(0, nrow = nrow(M), ncol = ncol(M))
   rownames(Y) <- rownames(M)
@@ -466,16 +421,15 @@ sim_target <- function(M,
     y_var <- m_var * (1 - mediator_effect_size)
     e <- rnorm(n = nrow(M), mean = 0, sd = 1)
     if (mediator_effect_size != 0) {
-      e_var <- ((1 - mediator_effect_size) * m_var)/mediator_effect_size
-      Y[,i] <- M[,i] * sqrt(target_to_mediator_var_ratio)
+      e_var <- non_sample_var(e)
+      Y[,i] <- M[,i] * sqrt(mediator_effect_size/m_var)  + e * sqrt((1 - mediator_effect_size)/e_var)
     } else{
-      e_var <- m_var
+      Y[,i] <- M[,i] * sqrt(mediator_effect_size)  + e * sqrt(1 - mediator_effect_size)
     }
-    
-    e <- (e * sqrt(e_var))/sqrt(non_sample_var(e))
-    Y[,i] <- Y[,i] + e * sqrt(target_to_mediator_var_ratio)
   }
-  Y
+  
+  return(list(data = Y,
+              mediator_effect_size = mediator_effect_size))
 }
 
 #' Simulate a balanced eight allele design matrix
