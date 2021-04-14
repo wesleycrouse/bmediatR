@@ -12,6 +12,7 @@ plot_posterior_odds(
   include_chr = c(1:19, "X"),
   expand_lim_factor = 0.025,
   label_thresh = NULL,
+  label_thresh_greater_than = TRUE,
   label_only_chr = NULL,
   bgcol = "white",
   altcol = "gray",
@@ -37,6 +38,9 @@ for genome-wide mediators.}
 \item{include_chr}{DEFAULT: c(1:19, "X"). Chromosomes to include in plot.}
 
 \item{label_thresh}{DEFAULT: NULL. Label mediators that surpass label_thresh. Default does not add labels.}
+
+\item{label_thresh_greater_than}{DEFAULT: TRUE. If TRUE, passing mediators have log odds greater than the threshold.
+If FALSE, passing mediators have log odds less than the threshold.}
 
 \item{label_only_chr}{DEFAULT: NULL. Only label mediators that pass label_thresh on the specified chromosome.}
 
