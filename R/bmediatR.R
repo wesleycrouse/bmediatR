@@ -866,8 +866,12 @@ bmediatR <- function(y, M, X,
   #optionally use sum-to-zero contrast for X
   #recommended when X is a matrix of factors, with a column for every factor level
   if (options_X$sum_to_zero == TRUE) {
-    C <- sumtozero_contrast(ncol(X))
-    X <- X%*%C
+    if (ncol(X)<2){
+      stop("Cannot use sum-to-zero contrast when X has one column")
+    } else {
+      C <- sumtozero_contrast(ncol(X))
+      X <- X%*%C
+    }
   }
   
   #optionally center and scale X
