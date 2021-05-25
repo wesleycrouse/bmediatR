@@ -260,6 +260,8 @@ plot_prior_bar <- function(bmediatR_object,
 #' @param include_chr DEFAULT: c(1:19, "X"). Chromosomes to include in plot.
 #' @param expland_lim_factor DEFAULT: 0.025. Scale to increase plot limits by.
 #' @param label_thresh DEFAULT: NULL. Label mediators that surpass label_thresh. Default does not add labels.
+#' @param label_thresh_greater_than DEFAULT: TRUE. If TRUE, passing mediators have log odds greater than the threshold.
+#' If FALSE, passing mediators have log odds less than the threshold.  
 #' @param label_only_chr DEFAULT: NULL. Only label mediators that pass label_thresh on the specified chromosome.
 #' @param qtl_dat DEFAULT: NULL. QTL data that includes position of QTL and outcome. Adds ticks to the figure.
 #' @export
@@ -271,6 +273,7 @@ plot_posterior_odds <- function(bmediatR_object,
                                 include_chr = c(1:19, "X"), 
                                 expand_lim_factor = 0.025, 
                                 label_thresh = NULL, 
+                                label_thresh_greater_than = TRUE,
                                 label_only_chr = NULL,
                                 bgcol = "white", altcol = "gray", altbgcol = "white", 
                                 hlines_col = "gray80", col = "black", cex = 0.75,
@@ -338,17 +341,25 @@ plot_posterior_odds <- function(bmediatR_object,
     tibble::column_to_rownames(med_var) %>%
     as.matrix()
   
-  if (!is.null(label_thresh) & any(label_post_odds > label_thresh)) {
-    labels <- rownames(label_post_odds)[label_post_odds > label_thresh]
+  
+  if (!is.null(label_thresh)) {
+    if (label_thresh_greater_than & any(label_post_odds > label_thresh)) {
+      labels <- rownames(label_post_odds)[label_post_odds > label_thresh]
+    }
+    if (!label_thresh_greater_than & any(label_post_odds < label_thresh)) {
+      labels <- rownames(label_post_odds)[label_post_odds < label_thresh]
+    }
     
-    label_map_df <- med_map_df %>%
-      filter((!!as.symbol(med_var)) %in% labels) 
-    
-    for (i in 1:nrow(label_map_df)) {
-      lab_pos <- xpos[label_map_df[i, med_var]]
-      lab_post_odds <- post_odds[label_map_df[i, med_var],]
+    if (!is.null(labels)) {
+      label_map_df <- med_map_df %>%
+        filter((!!as.symbol(med_var)) %in% labels) 
       
-      text(x = lab_pos, y = lab_post_odds, label_map_df$symbol[i], font = 3)
+      for (i in 1:nrow(label_map_df)) {
+        lab_pos <- xpos[label_map_df[i, med_var]]
+        lab_post_odds <- post_odds[label_map_df[i, med_var],]
+        
+        text(x = lab_pos, y = lab_post_odds, label_map_df$symbol[i], font = 3)
+      }
     }
   }
   if (!is.null(outcome_symbol)) {
