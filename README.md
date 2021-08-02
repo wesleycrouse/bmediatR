@@ -34,7 +34,7 @@ simple_m <- sim_mpp_single_locus(locus_matrix = balanced_matrix,
                                  qtl_effect_size = 0.7)
 
 ## Simulate an target for the mediator simulates 60% of its variation
-simple_y <- sim_target(simple_m$data, mediator_effect_size = 0.6)
+simple_y <- sim_target_from_mediator(simple_m$data, mediator_effect_size = 0.6)
 
 ## Simulate a null mediator (SNP has no effect)
 simple_m_null <- sim_mpp_single_locus(locus_matrix = balanced_matrix, 
