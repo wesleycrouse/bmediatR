@@ -50,13 +50,15 @@ simple_m_null <- sim_mpp_single_locus(locus_matrix = balanced_matrix,
 true_med <- bmediatR(y = simple_y$data[,1], 
                      M = cbind(simple_m$data[,1, drop = FALSE], simple_m_null$data[,1, drop = FALSE]), 
                      X = SNP_X,
-                     ln_prior_c = "reactive")
+                     ln_prior_c = "complete")
 null_med <- bmediatR(y = simple_y$data[,1], 
                      M = cbind(simple_m$data[,1, drop = FALSE], simple_m_null$data[,1, drop = FALSE]), 
                      X = SNP_X,
-                     ln_prior_c = "reactive")
+                     ln_prior_c = "complete")
 
 ## Plot posterior probabilities
-plot_posterior_bar(true_med, mediator_id = "sim_m_1", relabel_x = "simulated m", main = "Mediation through M")
-plot_posterior_bar(null_med, mediator_id = "sim_m_null_1", relabel_x = "simulated null m", main = "Mediation through null M")
+plot_posterior_bar(true_med, mediator_id = "sim_m_1", 
+		   relabel_x = "simulated m", main = "Mediation through M")
+plot_posterior_bar(null_med, mediator_id = "sim_m_null_1", 
+		   relabel_x = "simulated null m", main = "Mediation through null M")
 ```
