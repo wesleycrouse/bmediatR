@@ -47,11 +47,11 @@ simple_m_null <- sim_mpp_single_locus(locus_matrix = balanced_matrix,
                                       sim_label = "sim_m_null")
 
 ## Run mediation analysis
-true_med <- bmediatR(y = simple_y[,1], 
+true_med <- bmediatR(y = simple_y$data[,1], 
                      M = cbind(simple_m$data[,1, drop = FALSE], simple_m_null$data[,1, drop = FALSE]), 
                      X = SNP_X,
                      ln_prior_c = "reactive")
-null_med <- bmediatR(y = simple_y[,1], 
+null_med <- bmediatR(y = simple_y$data[,1], 
                      M = cbind(simple_m$data[,1, drop = FALSE], simple_m_null$data[,1, drop = FALSE]), 
                      X = SNP_X,
                      ln_prior_c = "reactive")
