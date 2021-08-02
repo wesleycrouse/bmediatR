@@ -25,26 +25,26 @@ SNP_X <-  balanced_matrix %*% M_single
 set.seed(10)
 
 ## Simulate a mediator for which the SNP explains 70% of its variation
-simple_m <- sim_cc_single_locus(locus_matrix = balanced_matrix, 
-                                num_replicates = 1, 
-                                num_sim = 1,
-                                M_ID = "0,0,0,0,1,1,1,1", 
-                                impute = TRUE,
-                                strain_effect_size = 0,
-                                qtl_effect_size = 0.7)
+simple_m <- sim_mpp_single_locus(locus_matrix = balanced_matrix, 
+                                 num_replicates = 1, 
+                                 num_sim = 1,
+                                 M_ID = "0,0,0,0,1,1,1,1", 
+                                 impute = TRUE,
+                                 strain_effect_size = 0,
+                                 qtl_effect_size = 0.7)
 
 ## Simulate an target for the mediator simulates 60% of its variation
 simple_y <- sim_target(simple_m$data, mediator_effect_size = 0.6)
 
 ## Simulate a null mediator (SNP has no effect)
-simple_m_null <- sim_cc_single_locus(locus_matrix = balanced_matrix, 
-                                     num_replicates = 1, 
-                                     num_sim = 1,
-                                     M_ID = "0,0,0,0,1,1,1,1", 
-                                     impute = TRUE,
-                                     strain_effect_size = 0,
-                                     qtl_effect_size = 0,
-                                     sim_label = "sim_m_null")
+simple_m_null <- sim_mpp_single_locus(locus_matrix = balanced_matrix, 
+                                      num_replicates = 1, 
+                                      num_sim = 1,
+                                      M_ID = "0,0,0,0,1,1,1,1", 
+                                      impute = TRUE,
+                                      strain_effect_size = 0,
+                                      qtl_effect_size = 0,
+                                      sim_label = "sim_m_null")
 
 ## Run mediation analysis
 true_med <- bmediatR(y = simple_y[,1], 
