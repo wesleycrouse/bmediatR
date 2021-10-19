@@ -525,6 +525,7 @@ bmediatR_v0 <- function(y, M, X,
   sigma6_equal_sigma3 <- all(lambda[3]==lambda[6],
                              tau_sq_mu[3] == tau_sq_mu[6], 
                              tau_sq_Z[3] == tau_sq_Z[6],
+                             phi_sq_X[3] == phi_sq_X[6],
                              identical(Z_y, Z_M),
                              identical(w_y, w_M))
   
@@ -942,6 +943,7 @@ bmediatR <- function(y, M, X,
   sigma6_equal_sigma3 <- all(lambda[3]==lambda[6],
                              tau_sq_mu[3] == tau_sq_mu[6], 
                              tau_sq_Z[3] == tau_sq_Z[6],
+                             phi_sq_X[3] == phi_sq_X[6],
                              identical(Z_y, Z_M),
                              identical(w_y, w_M))
   
