@@ -428,7 +428,7 @@ bmediatR_v0 <- function(y, M, X,
   }
   
   #optionally align data
-  processed_data <- process_data(y = y, M = M, X = X,
+  processed_data <- process_data(y = y, M = M, X = X, Z = Z,
                                  Z_y = Z_y, Z_M = Z_M,
                                  w_y = w_y, w_M = w_M, 
                                  align_data = align_data,
