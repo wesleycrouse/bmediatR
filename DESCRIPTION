@@ -1,6 +1,6 @@
 Package: bmediatR
 Title: Toolset for running Bayesian mediation model selection analysis
-Version: 0.1.1
+Version: 0.1.2
 Authors@R: c(person("Gregory", "Keele", role = "aut"),
              person("Wesley", "Crouse", email = "wesleycrouse@gmail.com", role = c("aut", "cre")))
 Description: This package performs Bayesian mediation model selection analysis.
