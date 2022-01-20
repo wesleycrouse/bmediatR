@@ -270,6 +270,7 @@ process_data <- function(y, M, X,
 
   if (!is.null(Z)) {
     if (align_data) {
+      Z <- Z[(rownames(Z) %in% names(y)) & (rownames(Z) %in% rownames(M)), , drop = FALSE]
       Z_y <- cbind(Z, Z_y[rownames(Z),])
       Z_M <- cbind(Z, Z_M[rownames(Z),])
     } else {
