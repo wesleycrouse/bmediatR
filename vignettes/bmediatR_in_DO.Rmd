@@ -1,0 +1,248 @@
+---
+title: "Replicating Simple Example"
+author: "Madeleine S. Gastonguay"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Replicating Simple Example}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+## Load Packages and Set up environment
+```{r}
+# devtools::install_github("wesleycrouse/bmediatR", build_vignettes = T)
+library(bmediatR)
+library(qtl2)
+library(tidyverse)
+
+## CC colors
+cc_col <- as.character(qtl2::CCcolors)
+
+```
+
+## Overview
+
+In this vignette, we will recreate the illustrative example of bmediatR applied to QTL mapping with simulated Divesity Outbred (DO) mouse data shown in figure 5 of the [manuscript](https://www.biorxiv.org/content/10.1101/2021.07.19.452969v2).
+
+<!-- ```{r} -->
+<!-- id_data <- 14912484 -->
+<!-- fs_details(id_data, mine = F, session = NULL)$files[[1]]$download_url -->
+<!-- download.file(fs_download(14912484, mine = F, session = NULL, urls_only = T)[1,], -->
+<!--               "data.rds") -->
+
+<!-- download.file("https://ndownloader.figshare.com/files/28714917/data/bmediatr_do_liver_qtlviewer.RData", destfile = "test.RData") -->
+
+<!-- download.file("https://churchilllab.jax.org/qtlviewer/svenson/DOHFD", "qtl_viewer_download.RData") -->
+
+<!-- load("qtl_viewer_download.RData") -->
+<!-- ``` -->
+
+## Simulate Data
+
+For this example, we use genoprobs from 192 DO mice.
+
+```{r}
+# Load genoprobs
+load("do_liver_genoprobs.RData")
+```
+
+### Non-mediator simulation
+Simulate M and Y for non-mediator data:
+```{r}
+## set seed
+set.seed(50)
+
+null_m <- sim_mpp_data(genoprobs = genoprobs,
+                       map = map,
+                       qtl_effect_size = 0,
+                       num_replicates = 1,
+                       num_sim = 1,
+                       vary_locus = TRUE,
+                       sim_label = "null_m")
+null_y <- sim_mpp_data(genoprobs = genoprobs,
+                       map = map,
+                       qtl_effect_size = 0.3,
+                       num_replicates = 1,
+                       num_sim = 1,
+                       M_ID = "0,0,0,0,1,1,1,1",
+                       beta = c(0, 1),
+                       vary_locus = FALSE,
+                       sim_label = "null_y",
+                       impute = FALSE)
+
+```
+
+Genome scans for M and Y:
+```{r}
+null_m_scan <- scan1(genoprobs = genoprobs,
+                     pheno = null_m$data,
+                     kinship = K)
+null_y_scan <- scan1(genoprobs = genoprobs,
+                     pheno = null_y$data, 
+                     kinship = K)
+```
+
+```{r}
+plot_scan1(null_m_scan, map = map, 
+           col = "black", altcol = "gray30", 
+           bgcol = "white", altbgcol = "white",
+           main = "No QTL for M",
+           ylim = c(0, max(null_y_scan) + 1))
+plot_scan1(null_y_scan, map = map, 
+           col = "black", altcol = "gray30", 
+           bgcol = "white", altbgcol = "white",
+           main = "QTL for Y",
+           ylim = c(0, max(null_y_scan) + 1))
+
+```
+
+Apply bmediatR:
+```{r}
+null_y_qtl <- find_peaks(null_y_scan, map = map) %>%
+  filter(lod == max(lod))
+
+null_med_complete <- bmediatR(
+  y = null_y$data, 
+  M = null_m$data, 
+  X = pull_genoprobpos(genoprobs = genoprobs, map = map, chr = null_y_qtl$chr, pos = null_y_qtl$pos),
+  ln_prior_c = "complete"
+)
+
+## Plot
+plot_posterior_bar(
+  null_med_complete, 
+  mediator_id = "null_m_1", 
+  relabel_x = "M", 
+  add_number_labels = TRUE, 
+  num_dig = 2
+)
+```
+
+
+<!-- ### Co-local Simultaion -->
+<!-- Simulate data: -->
+<!-- ```{r} -->
+<!-- set.seed(100) -->
+<!-- colocal <- sim_mpp_data(genoprobs = genoprobs, -->
+<!--                         map = map, -->
+<!--                         qtl_effect_size = 0.3, -->
+<!--                         num_replicates = 1, -->
+<!--                         num_sim = 2, -->
+<!--                         M_ID = "0,0,0,0,1,1,1,1", -->
+<!--                         beta = c(0, 1), -->
+<!--                         vary_locus = FALSE, -->
+<!--                         sim_label = "colocal_y", -->
+<!--                         impute = FALSE) -->
+<!-- colocal_m <- colocal$data[,1, drop = FALSE] -->
+<!-- colocal_y <- colocal$data[,2, drop = FALSE] -->
+<!-- ``` -->
+
+<!-- Genome scans for M and Y: -->
+<!-- ```{r} -->
+<!-- colocal_m_scan <- scan1(genoprobs = genoprobs, -->
+<!--                         pheno = colocal_m, -->
+<!--                         kinship = K) -->
+<!-- colocal_y_scan <- scan1(genoprobs = genoprobs, -->
+<!--                         pheno = colocal_y,  -->
+<!--                         kinship = K) -->
+
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- ymax <- max(c(max(colocal_m_scan), max(colocal_y_scan)) + 1) -->
+<!-- plot_scan1(colocal_m_scan, map = map,  -->
+<!--            col = "black", altcol = "gray30",  -->
+<!--            bgcol = "white", altbgcol = "white", -->
+<!--            main = "No QTL for M", -->
+<!--            ylim = c(0, ymax)) -->
+<!-- plot_scan1(colocal_y_scan, map = map,  -->
+<!--            col = "black", altcol = "gray30",  -->
+<!--            bgcol = "white", altbgcol = "white", -->
+<!--            main = "QTL for Y", -->
+<!--            ylim = c(0, ymax)) -->
+<!-- ``` -->
+
+<!-- Run mediation: -->
+<!-- ```{r} -->
+<!-- colocal_y_qtl <- find_peaks(colocal_y_scan, map = map) %>% -->
+<!--   filter(lod == max(lod)) -->
+
+<!-- colocal_med_complete <- bmediatR( -->
+<!--   y = colocal_y,  -->
+<!--   M = colocal_m,  -->
+<!--   X = pull_genoprobpos(genoprobs = genoprobs, map = map, chr = colocal_y_qtl$chr, pos = colocal_y_qtl$pos), -->
+<!--   ln_prior_c = "complete" -->
+<!-- ) -->
+
+<!-- ## Plot -->
+<!-- plot_posterior_bar( -->
+<!--   colocal_med_complete,  -->
+<!--   mediator_id = "colocal_y_1",  -->
+<!--   relabel_x = "M",  -->
+<!--   add_number_labels = TRUE,  -->
+<!--   num_dig = 2 -->
+<!-- ) -->
+
+<!-- ``` -->
+
+<!-- ### Complete Mediation Simulation -->
+<!-- Simulate M and Y for complete mediation data: -->
+<!-- ```{r} -->
+<!-- # set seed -->
+<!-- set.seed(60) -->
+
+<!-- complete_m <- sim_mpp_data(genoprobs = genoprobs, -->
+<!--                            map = map, -->
+<!--                            qtl_effect_size = 0.3, -->
+<!--                            num_replicates = 1, -->
+<!--                            num_sim = 1, -->
+<!--                            M_ID = "0,0,0,0,1,1,1,1", -->
+<!--                            beta = c(0, 1), -->
+<!--                            vary_locus = FALSE, -->
+<!--                            sim_label = "complete_m", -->
+<!--                            impute = FALSE) -->
+<!-- complete_y <- sim_target_from_mediator(M = complete_m$data, mediator_effect_size = 0.7, sim_label = "complete_y") -->
+
+<!-- ``` -->
+
+<!-- Genome scans for M and Y: -->
+<!-- ```{r} -->
+<!-- complete_m_scan <- scan1(genoprobs = genoprobs, -->
+<!--                          pheno = complete_m$data, -->
+<!--                          kinship = K) -->
+<!-- complete_y_scan <- scan1(genoprobs = genoprobs, -->
+<!--                          pheno = complete_y$data,  -->
+<!--                          kinship = K) -->
+<!-- ``` -->
+
+<!-- bmediatR mediation: -->
+<!-- ```{r} -->
+<!-- complete_y_qtl <- find_peaks(complete_y_scan, map = map) %>% -->
+<!--   filter(lod == max(lod)) -->
+
+<!-- complete_med_complete <- bmediatR( -->
+<!--   y = complete_y$data,  -->
+<!--   M = complete_m$data,  -->
+<!--   X = pull_genoprobpos(genoprobs = genoprobs, map = map, chr = complete_y_qtl$chr, pos = complete_y_qtl$pos), -->
+<!--   ln_prior_c = "complete" -->
+<!-- ) -->
+
+<!-- ## Plot -->
+<!-- plot_posterior_bar( -->
+<!--   complete_med_complete,  -->
+<!--   mediator_id = "complete_m_1",  -->
+<!--   relabel_x = "M",  -->
+<!--   add_number_labels = TRUE,  -->
+<!--   num_dig = 2 -->
+<!-- ) -->
+<!-- ``` -->
+
