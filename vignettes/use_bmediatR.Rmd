@@ -3,9 +3,9 @@ title: "Getting Started with bmediatR"
 author: "Madeleine S. Gastonguay"
 output: 
    html_document:
-    highlight: tango
     code_folding: show
-    theme: flatly
+    highlight: pygment
+    theme: yeti
     toc: true
     toc_depth: 3
     toc_float:
