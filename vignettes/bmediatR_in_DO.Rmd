@@ -46,7 +46,7 @@ In this vignette, we will recreate the illustrative example of bmediatR applied 
 
 For this example, we use genoprobs from 192 DO mice. We need to download them from the manuscript [figshare](https://figshare.com/articles/dataset/Data_and_code_for_Bayesian_model_selection_manuscript/14912484). This step will take a few minutes.
 
-```{r, eval = F}
+```{r}
 id_data <- 14912484
 download_url <- rfigshare::fs_details(id_data, mine = F, session = NULL)$files[[4]]$download_url
 options(timeout = max(300, getOption("timeout")))
