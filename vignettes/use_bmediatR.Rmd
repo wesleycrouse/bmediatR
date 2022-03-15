@@ -5,7 +5,7 @@ output:
    html_document:
     highlight: tango
     code_folding: show
-    theme: sandstone
+    theme: flatly
     toc: true
     toc_depth: 3
     toc_float:
@@ -26,7 +26,7 @@ knitr::opts_chunk$set(
 
 ## Installing from Github and Loading the Package
 ```{r, warning=FALSE}
-# devtools::install_github("wesleycrouse/bmediatR", build_vignettes = T)
+# devtools::install_github("wesleycrouse/bmediatR@add-vignettes", build_vignettes = T)
 library(bmediatR)
 library(ggplot2)
 ```
@@ -178,37 +178,13 @@ bmediatR only calculates the likelihood for hypotheses that are required based o
 
 
 We can plot the results of bmediatR using the `plot_posterior_bar()` function:
-```{r, echo = F, include=FALSE}
-ggsave("true_med_fig.png",
-       plot_posterior_bar(med_results, mediator_id = "sim_m_1",
-                          relabel_x = "simulated m", main = "Mediation through M") ,
-       width = 7, height = 3
-)
-ggsave("null_med_fig.png",
-       plot_posterior_bar(med_results, mediator_id = "sim_m_null_1",
-                          relabel_x = "simulated null m", main = "Mediation through null M"),
-       width = 7, height = 3
-)
-```
-
 
 ```{r}
 plot_posterior_bar(med_results, mediator_id = "sim_m_1", 
                    relabel_x = "simulated m", main = "Mediation through M") 
-```
 
-```{r,  out.width="100%", echo = F}
-knitr::include_graphics("true_med_fig.png")
-```
-
-```{r}
 plot_posterior_bar(med_results, mediator_id = "sim_m_null_1", 
                    relabel_x = "simulated null m", main = "Mediation through null M")
-```
-
-
-```{r,  out.width="100%", echo = F}
-knitr::include_graphics("null_med_fig.png")
 ```
 
 bmediatR accurately places the greatest posterior probability on the complete mediation model and other non-mediation models when testing the simulated mediator and null mediator, respectively. 
@@ -235,38 +211,14 @@ The output contains the same elements as the `bmediatR()` function, without the 
 
 Plotting these results reveals that the true mediator is now classified as a partial mediator because complete mediation is not a model option:
 
-```{r, echo = F, include=FALSE}
-ggsave("true_med_fig_update.png",
-       plot_posterior_bar(med_results_updated, mediator_id = "sim_m_1",
-                          relabel_x = "simulated m", main = "Mediation through M") ,
-       width = 7, height = 3
-)
-ggsave("null_med_fig_update.png",
-       plot_posterior_bar(med_results_updated, mediator_id = "sim_m_null_1",
-                          relabel_x = "simulated null m", main = "Mediation through null M"),
-       width = 7, height = 3
-)
-```
-
-
-```{r,  eval = F}
+```{r}
 plot_posterior_bar(med_results_updated, mediator_id = "sim_m_1", 
                    relabel_x = "simulated m", main = "Mediation through M") 
-```
 
-```{r,  out.width="100%", echo = F}
-knitr::include_graphics("true_med_fig_update.png")
-```
-
-```{r,  eval = F}
 plot_posterior_bar(med_results_updated, mediator_id = "sim_m_null_1", 
                    relabel_x = "simulated null m", main = "Mediation through null M")
 ```
 
-
-```{r,  out.width="100%", echo = F}
-knitr::include_graphics("null_med_fig_update.png")
-```
 
 There are limitations of this function, as the required likelihoods must have been calculated in the original bmediatR object. For example, if we recalculate using `ln_prior_c = reactive`, the posterior probabilities for models with reverse causality will not be calculated because we did not calculate the likelihood for the hypotheses with reverse causality in the original function call.
 ```{r}
