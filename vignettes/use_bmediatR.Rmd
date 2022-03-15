@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 
 ## Installing from Github and Loading the Package
-```{r}
+```{r, warning=FALSE}
 devtools::install_github("wesleycrouse/bmediatR", build_vignettes = T)
 library(bmediatR)
 library(ggplot2)
@@ -47,7 +47,7 @@ SNP_X <-  balanced_matrix %*% M_single
 ```
 
 ```{r}
-## Set seed so simulation is replicable
+# Set seed so simulation is replicable
 set.seed(10)
 ```
 
@@ -184,7 +184,7 @@ ggsave("null_med_fig.png",
 ```
 
 
-```{r,  eval = F}
+```{r}
 plot_posterior_bar(med_results, mediator_id = "sim_m_1", 
                    relabel_x = "simulated m", main = "Mediation through M") 
 ```
@@ -193,7 +193,7 @@ plot_posterior_bar(med_results, mediator_id = "sim_m_1",
 knitr::include_graphics("true_med_fig.png")
 ```
 
-```{r,  eval = F}
+```{r}
 plot_posterior_bar(med_results, mediator_id = "sim_m_null_1", 
                    relabel_x = "simulated null m", main = "Mediation through null M")
 ```
