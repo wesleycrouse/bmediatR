@@ -1,7 +1,15 @@
 ---
 title: "Getting Started with bmediatR"
 author: "Madeleine S. Gastonguay"
-output: rmarkdown::html_vignette
+output: 
+   html_document:
+    highlight: tango
+    code_folding: show
+    theme: sandstone
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
 vignette: >
   %\VignetteIndexEntry{Getting Started with bmediatR}
   %\VignetteEngine{knitr::rmarkdown}
@@ -18,7 +26,7 @@ knitr::opts_chunk$set(
 
 ## Installing from Github and Loading the Package
 ```{r, warning=FALSE}
-devtools::install_github("wesleycrouse/bmediatR", build_vignettes = T)
+# devtools::install_github("wesleycrouse/bmediatR", build_vignettes = T)
 library(bmediatR)
 library(ggplot2)
 ```
