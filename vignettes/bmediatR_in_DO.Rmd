@@ -26,7 +26,7 @@ knitr::opts_chunk$set(
 
 ## Load Packages and Set up environment
 ```{r}
-# devtools::install_github("wesleycrouse/bmediatR@add-vignettes", build_vignettes = T)
+# devtools::install_github("wesleycrouse/bmediatR@add-vignettes", build_vignettes = F)
 library(bmediatR)
 library(qtl2)
 library(tidyverse)
