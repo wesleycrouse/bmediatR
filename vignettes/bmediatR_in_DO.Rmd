@@ -24,6 +24,11 @@ knitr::opts_chunk$set(
 ```
 
 
+## Overview
+
+In this vignette, we will demonstrate mediation analysis in the context of multi-allelic QTL analysis by simulating data based on the genomes of Diversity Outbred (DO) mice. This example is shown in figure 5 of the [manuscript](https://www.biorxiv.org/content/10.1101/2021.07.19.452969v2). We will simulate three common scenarios found in genetic mediation analysis: M is a non-mediator of X on Y, M and Y are independently driven by X (co-local), and M is a complete mediator of X on Y. In each setting, Y and M are simulated based on a bi-allelic QTL X at a randomly selected locus, with each allele distributed to four founder strains. For each example, we will examine the results of QTL mapping, compare the founder haplotype effects of the peak QTL on `Y` and `M`, and apply bmediatR to infer the relationship between the QTL, `M`, and `Y`.
+
+
 ## Load Packages and Set up environment
 ```{r, message=F}
 devtools::install_github("wesleycrouse/bmediatR@add-vignettes", build_vignettes = T)
@@ -38,13 +43,9 @@ cc_col <- as.character(qtl2::CCcolors)
 
 ```
 
-## Overview
+## Download Data
 
-In this vignette, we will recreate the illustrative example of bmediatR applied to QTL mapping with simulated Divesity Outbred (DO) mouse data shown in figure 5 of the [manuscript](https://www.biorxiv.org/content/10.1101/2021.07.19.452969v2).
-
-## Simulate Data
-
-For this example, we use genoprobs from 192 DO mice. We need to download them from the manuscript [figshare](https://figshare.com/articles/dataset/Data_and_code_for_Bayesian_model_selection_manuscript/14912484). This step will take a few minutes.
+For this example, we will simulate data using the genomes of 192 DO mice. We first need to download them from the manuscript [figshare](https://figshare.com/articles/dataset/Data_and_code_for_Bayesian_model_selection_manuscript/14912484). This step will take a few minutes, and it may be necessary to adjust the length of timeout using the `options` function.
 
 ```{r, eval = F}
 # Figshare file containing data used in manuscript
@@ -60,16 +61,16 @@ load(unzip("vignette_data.RData.zip"))
 ```
 
 ```{r, include = F}
-# To reduce package download time, the previous code chunk is not run and we will 
-# load pre-saved results for this example.
+# To reduce package download time, the previous code chunk is not run in the vignette 
+# and we will load pre-saved results for this example.
 load("presaved_DO_data.RData")
 ```
 
 
-### Non-mediator simulation
-Simulate M and Y for non-mediator data:
+## Non-mediator simulation
+bmediatR includes built-in functions to help simulate data from a multiparental population (MPP) such as the Collaborative Cross (CC) or Diversity Outbred (DO) mice. Below, we randomly select a genetic locus `X` and simulate `M` and `Y` such that `X` explains 30% of the variance in `Y`, but does not influence `M`.
 ```{r, eval = F}
-## set seed
+# set seed
 set.seed(50)
 
 null_m <- sim_mpp_data(genoprobs = genoprobs,
@@ -92,7 +93,7 @@ null_y <- sim_mpp_data(genoprobs = genoprobs,
 
 ```
 
-Genome scans for M and Y:
+### QTL mapping for `M` and `Y`
 ```{r, eval = F}
 null_m_scan <- scan1(genoprobs = genoprobs,
                      pheno = null_m$data,
@@ -116,7 +117,7 @@ plot_scan1(null_y_scan, map = map,
 
 ```
 
-Compare haplotype effects:
+Next, we will compare the allele effects of `X` on `M` and `Y`, and see that they are uncorrelated as we would expect in a non-mediation setting.
 ```{r, eval = F}
 ## Find peak QTL for Y
 null_y_qtl <- find_peaks(null_y_scan, map = map) %>%
@@ -153,7 +154,10 @@ effects_w_ci_plot(null_qtl_effects)
 ```
 
 
-Apply bmediatR:
+### Apply Bayesian model selection with `bmediatR`
+
+We will apply bmediatR using the `complete` prior model setting because we regard the models with reverse causality as implausible in this setting. 
+
 ```{r}
 null_med_complete <- bmediatR(
   y = null_y$data, 
@@ -162,7 +166,7 @@ null_med_complete <- bmediatR(
   ln_prior_c = "complete"
 )
 
-## Plot
+# Plot
 plot_posterior_bar(
   null_med_complete, 
   mediator_id = "null_m_1", 
@@ -172,9 +176,21 @@ plot_posterior_bar(
 )
 ```
 
+The results of `bmediatR` show that all the posterior model probability is placed on an other non-mediation model. These results align with our expectation for a non-mediation simulation. In fact, the data generating model `(0,0,1)`, is given a posterior probability of 0.93:
 
-### Co-local Simultaion
-Simulate data:
+```{r}
+exp(null_med_complete$ln_post_c)
+```
+
+
+## Co-local Simulation
+For the co-local simulations, we selected a random genetic locus `X` and independently simulated `M` and `Y` based on an effect size of 0.3. 
+
+```{r}
+# add tikz figure of DAG used to simulate data
+```
+
+
 ```{r, eval = F}
 set.seed(100)
 colocal <- sim_mpp_data(genoprobs = genoprobs,
@@ -191,7 +207,7 @@ colocal_m <- colocal$data[,1, drop = FALSE]
 colocal_y <- colocal$data[,2, drop = FALSE]
 ```
 
-Genome scans for M and Y:
+### QTL mapping for `M` and `Y`
 ```{r, eval = F}
 colocal_m_scan <- scan1(genoprobs = genoprobs,
                         pheno = colocal_m,
@@ -199,10 +215,9 @@ colocal_m_scan <- scan1(genoprobs = genoprobs,
 colocal_y_scan <- scan1(genoprobs = genoprobs,
                         pheno = colocal_y,
                         kinship = K)
-
 ```
 
-
+The results of qtl mapping show that both `M` and `Y` have a QTL on chromosome 8.
 ```{r, out.width="100%"}
 ymax <- max(c(max(colocal_m_scan), max(colocal_y_scan)) + 1)
 plot_scan1(colocal_m_scan, map = map,
@@ -217,7 +232,7 @@ plot_scan1(colocal_y_scan, map = map,
            ylim = c(0, ymax))
 ```
 
-Compare haplotype effects
+
 ```{r, eval = F}
 ## Find peak QTL for Y
 colocal_y_qtl <- find_peaks(colocal_y_scan, map = map) %>%
@@ -255,13 +270,16 @@ colocal_qtl_effects <- cbind(colocal_y_qtl_effects$coef, colocal_y_qtl_effects$S
 
 ```
 
+The allele effects for `M` and `Y` are strongly correlated.
+
 ```{r}
 ## Plot
 effects_w_ci_plot(colocal_qtl_effects)
 ```
 
 
-Run mediation:
+### Apply Bayesian model selection with `bmediatR`
+
 ```{r}
 colocal_med_complete <- bmediatR(
   y = colocal_y,
@@ -281,8 +299,11 @@ plot_posterior_bar(
 
 ```
 
-### Complete Mediation Simulation
-Simulate M and Y for complete mediation data:
+`bmediatR` place the majority (0.76) of the posterior model probability on the co-local model, with the rest (0.24) on the partial mediation model. This demonstrates the method’s ability to distinguish between complete mediation and co-local relationships, even when allele effects are correlated.
+
+## Complete Mediation Simulation
+In the final scenario, we will simulate complete mediation. First, we randomly select a genetic locus X and simulate M with a 30% QTL mapping to X. Then, we simulate Y such that M explains 70% of the variance in Y. 
+
 ```{r, eval = F}
 # set seed
 set.seed(60)
@@ -297,11 +318,12 @@ complete_m <- sim_mpp_data(genoprobs = genoprobs,
                            vary_locus = FALSE,
                            sim_label = "complete_m",
                            impute = FALSE)
+
 complete_y <- sim_target_from_mediator(M = complete_m$data, mediator_effect_size = 0.7, sim_label = "complete_y")
 
 ```
 
-Genome scans for M and Y:
+### QTL mapping for M and Y
 ```{r, eval = F}
 complete_m_scan <- scan1(genoprobs = genoprobs,
                          pheno = complete_m$data,
@@ -311,6 +333,7 @@ complete_y_scan <- scan1(genoprobs = genoprobs,
                          kinship = K)
 ```
 
+QTL mapping shows that both M and Y have co-mapping QTLa on chromosome 6.
 ```{r, out.width="100%"}
 ymax <- max(c(max(complete_m_scan), max(complete_y_scan)) + 1)
 plot_scan1(complete_m_scan, map = map,
@@ -369,8 +392,7 @@ complete_qtl_effects <- cbind(complete_y_qtl_effects$coef, complete_y_qtl_effect
 effects_w_ci_plot(complete_qtl_effects)
 ```
 
-
-bmediatR mediation:
+### Apply Bayesian model selection with bmediatR
 ```{r}
 complete_med_complete <- bmediatR(
   y = complete_y$data,
@@ -388,7 +410,11 @@ plot_posterior_bar(
   num_dig = 2
 )
 ```
+BmediatR places the entire posterior probability on the complete mediation model, which aligns with our expectation.
 
+## conclusion 
+
+BmediatR excels when working with mpps…
 
 <!-- ```{r, include = F, eval = F} -->
 <!-- # Save results to compile the vignette quickly -->
