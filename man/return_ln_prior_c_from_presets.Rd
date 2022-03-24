@@ -10,6 +10,11 @@ return_ln_prior_c_from_presets(ln_prior_c)
 \item{ln_prior_c}{Log prior case probabilities. If posterior_summary() is being used for a non-default posterior odds
 summary, the log prior case probabilities used with bmediatR() are stored in its output.}
 }
+\value{
+\code{return_ln_prior_c_from_presets} returns a vector of length 12 consisting of
+\code{0}s for models to include and \code{-Inf}s for models to exclude. The order of models
+is the same as c1-c12 described in \code{model_info()}.
+}
 \description{
 This function takes the log prior case probabilities, and if a preset is provided, converts it into the formal log prior case
 probability.

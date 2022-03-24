@@ -12,6 +12,9 @@ return_preset_odds_index(
 \arguments{
 \item{odds_type}{The desired posterior odds.}
 }
+\value{
+\code{return_preset_odds_index} returns a list with indices for individual models and combinations of models.
+}
 \description{
 This helper function returns the columns of the log posterior case probabilities to be summed for
 commonly desired log posterior odds summaries.

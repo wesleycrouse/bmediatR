@@ -9,11 +9,14 @@ sumtozero_contrast(k)
 \arguments{
 \item{k}{Number of columns of the design matrix.}
 }
+\value{
+\code{sumtozero_contrast} returns a \code{k} x \code{k-1} matrix to be post-multiplied by the design matrix.
+}
 \description{
 This function takes the dimensions of a design matrix to produce a sum-to-zero contrast matrix, which is post-multiplied
 by the design matrix, reducing its dimension by one, resulting in a parameterization of the model in terms of deviation
 from mean (of a balanced data set).
 }
 \examples{
-sumtozero_contrast()
+sumtozero_contrast(8)
 }

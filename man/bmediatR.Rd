@@ -26,34 +26,34 @@ bmediatR(
 )
 }
 \arguments{
-\item{y}{Vector or single column matrix of an outcome variable. Single outcome variable expected. 
+\item{y}{Vector or single column matrix of an outcome variable. Single outcome variable expected.
 Names or rownames must match across M, X, Z, Z_y, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
 dimensions and order must match across inputs.}
 
-\item{M}{Vector or matrix of mediator variables. Multiple mediator variables are supported. 
+\item{M}{Vector or matrix of mediator variables. Multiple mediator variables are supported.
 Names or rownames must match across y, X, Z, Z_y, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
 dimensions and order must match across inputs.}
 
-\item{X}{Design matrix of the driver. Names or rownames must match across y, M, Z, Z_y, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. 
-If align_data = FALSE, dimensions and order must match across inputs. One common application is for X to represent genetic information at a QTL, 
+\item{X}{Design matrix of the driver. Names or rownames must match across y, M, Z, Z_y, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE.
+If align_data = FALSE, dimensions and order must match across inputs. One common application is for X to represent genetic information at a QTL,
 either as founder strain haplotypes or variant genotypes, though X is generalizable to other types of variables.}
 
-\item{Z}{DEFAULT: NULL. Design matrix of covariates that influence the outcome and mediator variables. 
+\item{Z}{DEFAULT: NULL. Design matrix of covariates that influence the outcome and mediator variables.
 Names or rownames must match to those of y, M, X, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data=FALSE,
 dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.}
 
-\item{Z_y}{DEFAULT: NULL. Design matrix of covariates that influence the outcome variable. 
+\item{Z_y}{DEFAULT: NULL. Design matrix of covariates that influence the outcome variable.
 Names or rownames must match to those of y, M, X, Z_M, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
 dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.}
 
-\item{Z_M}{DEFAULT: NULL. Design matrix of covariates that influence the mediator variables. 
+\item{Z_M}{DEFAULT: NULL. Design matrix of covariates that influence the mediator variables.
 Names or rownames must match across y, M, X, Z_y, w, w_y, and w_M (if provided) when align_data = TRUE. If align_data = FALSE,
 dimensions and order must match across inputs. If Z is provided, it supercedes Z_y and Z_M.}
 
-\item{w}{DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis that applies to both 
+\item{w}{DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis that applies to both
 y and M. Names must match across y, M, X, Z, Z_y, and Z_M (if provided) when align_data = TRUE. If align_data = FALSE,
-dimensions and order must match across inputs. A common use would be for an analysis of strain means, where w 
-is a vector of the number of individuals per strain. If no w, w_y, or w_M is given, observations are equally weighted as 1s for y and M. 
+dimensions and order must match across inputs. A common use would be for an analysis of strain means, where w
+is a vector of the number of individuals per strain. If no w, w_y, or w_M is given, observations are equally weighted as 1s for y and M.
 If w is provided, it supercedes w_y and w_M.}
 
 \item{w_y}{DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis, specific to the measurement
@@ -62,10 +62,10 @@ dimensions and order must match across inputs. A common use would be for an anal
 are summarized from a different number of individuals per strain. w_y is a vector of the number of individuals per strain used to
 measure y. If no w_y (or w) is given, observations are equally weighted as 1s for y.}
 
-\item{w_M}{DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis, specific to the measurement 
+\item{w_M}{DEFAULT: NULL. Vector or single column matrix of weights for individuals in analysis, specific to the measurement
 of M. Names must match across y, M, X, Z, Z_y, Z_M, and w_y (if provided) when align_data = TRUE. If align_data = FALSE,
 dimensions and order must match across inputs. A common use would be for an analysis of strain means, where y and M
-are summarized from a different number of individuals per strain. w_M is a vector of the number of individuals per strain use to 
+are summarized from a different number of individuals per strain. w_M is a vector of the number of individuals per strain use to
 measure M. If no w_M (or w) is given, observations are equally weighted as 1s for M.}
 
 \item{kappa}{DEFAULT: c(0.001, 0.001). Shape hyperparameters for the precisions of m and y. The DEFAULT represents uninformative priors on the precisions,
@@ -74,14 +74,14 @@ in combination with the default prior for lambda.}
 \item{lambda}{DEFAULT: c(0.001, 0.001). Rate hyperparameters for the precisions of m and y. The DEFAULT represents uninformative priors on the precisions,
 in combination with the default prior for kappa.}
 
-\item{tau_sq_mu}{DEFAULT: c(1000, 1000). Variance components for the intercepts mu_m and mu_y. The DEFAULT represents diffuse priors, analogous to 
+\item{tau_sq_mu}{DEFAULT: c(1000, 1000). Variance components for the intercepts mu_m and mu_y. The DEFAULT represents diffuse priors, analogous to
 fixed effect terms.}
 
-\item{tau_sq_Z}{DEFAULT: c(1000, 1000). Variance components for the covariates encoded in Z_m and Z_y. The DEFAULT represents diffuse priors, analogous 
+\item{tau_sq_Z}{DEFAULT: c(1000, 1000). Variance components for the covariates encoded in Z_m and Z_y. The DEFAULT represents diffuse priors, analogous
 to fixed effect terms.}
 
-\item{phi_sq}{DEFAULT: c(1, 1, 1). Each element of (a, b, c) represents one of the relationships being evaluated for mediation, 
-specifically the ratio of signal to noise. a is the effect of X on M, b is the effect of M on y, and c is the effect of X on y. 
+\item{phi_sq}{DEFAULT: c(1, 1, 1). Each element of (a, b, c) represents one of the relationships being evaluated for mediation,
+specifically the ratio of signal to noise. a is the effect of X on M, b is the effect of M on y, and c is the effect of X on y.
 The DEFAULT represents relationships that explain 50\% of the variation in the outcome variable.}
 
 \item{ln_prior_c}{DEFAULT: "complete". The prior log case probabilities. See model_info() for description of likelihoods and their
@@ -90,12 +90,24 @@ combinations into cases. Simplified pre-set options are available, including "co
 \item{options_X}{DEFAULT: list(sum_to_zero = TRUE, center = FALSE, scale = FALSE). Optional transformations for the X design matrix. Sum_to_zero imposes
 a sum-to-zero contrast on the columns of X. Center sets the mean of each column to 0. Scale sets the variance of each column to 1.}
 
-\item{align_data}{DEFAULT: TRUE. If TRUE, expect vector and matrix inputes to have names and rownames, respectively. The overlapping data
+\item{align_data}{DEFAULT: TRUE. If TRUE, expect vector and matrix inputs to have names and rownames, respectively. The overlapping data
 will then be aligned, allowing the user to not have to reduce data to overlapping samples and order them.}
 }
+\value{
+\code{bmediatR} returns a list containing the following components:
+ \item{ln_prob_data}{a matrix with likelihoods of each hypothesis H1-H8 for each candidate mediator.}
+ \item{ln_post_c}{a matrix with posterior probabilities of each causal model for each candidate mediator.}
+ \item{ln_post_odds}{a matrix with posterior odds of individual models or combinations of models for each candidate mediator.}
+ \item{ln_prior_c}{a single row matrix with posterior probabilities of each causal model.}
+ \item{ln_prior_odds}{a single row matrix with prior odds of individual models or combinations of models.}
+ \item{ln_ml}{the natural log of the marginal likelihood.}
+}
 \description{
-This function takes an outcome (y), candidate mediators (M), and a driver as a design matrix (X) to perform a 
+This function takes an outcome (y), candidate mediators (M), and a driver as a design matrix (X) to perform a
 Bayesian model selection analysis for mediation.
+}
+\note{
+See examples in vignettes with \code{vignette("use_bmediatR", "bmediatR")} or \code{vignette("bmediatR_in_DO", "bmediatR")}.
 }
 \examples{
 bmediatR()

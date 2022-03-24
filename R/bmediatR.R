@@ -5,8 +5,9 @@
 #' from mean (of a balanced data set).
 #'
 #' @param k Number of columns of the design matrix.
+#' @return \code{sumtozero_contrast} returns a \code{k} x \code{k-1} matrix to be post-multiplied by the design matrix.
 #' @export
-#' @examples sumtozero_contrast()
+#' @examples sumtozero_contrast(8)
 sumtozero_contrast <- function(k) {
   u <- 1/((k-1)^(0.5))
   v <- (-1+(k^(0.5)))*((k-1)^(-1.5))
@@ -69,6 +70,9 @@ batch_cols <- function(mat) {
 #'
 #' @param ln_prior_c Log prior case probabilities. If posterior_summary() is being used for a non-default posterior odds
 #' summary, the log prior case probabilities used with bmediatR() are stored in its output.
+#' @return \code{return_ln_prior_c_from_presets} returns a vector of length 12 consisting of
+#' \code{0}s for models to include and \code{-Inf}s for models to exclude. The order of models
+#' is the same as c1-c12 described in \code{model_info()}.
 #' @export
 #' @examples return_ln_prior_c_from_presets()
 return_ln_prior_c_from_presets <- function(ln_prior_c) {
@@ -95,6 +99,11 @@ return_ln_prior_c_from_presets <- function(ln_prior_c) {
 #' summary, the log prior case probabilities used with bmediatR() are stored in its output.
 #' @param c_numerator The index of cases to be summed in the numerator of the posterior odds. Cases, their order, and likelihoods
 #' are provided in model_info().
+#' @return \code{posterior_summary} returns a list containing the following components:
+#'  \item{ln_post_c}{a matrix with posterior probabilities of each causal model for each candidate mediator.}
+#'  \item{ln_post_odds}{a matrix with posterior odds of individual models or combinations of models for each candidate mediator.}
+#'  \item{ln_prior_odds}{a single row matrix with prior odds of individual models or combinations of models.}
+#'  \item{ln_ml}{the natural log of the marginal likelihood.}
 #' @export
 #' @examples posterior_summary()
 posterior_summary <- function(ln_prob_data,
@@ -187,6 +196,7 @@ posterior_summary <- function(ln_prob_data,
 #' commonly desired log posterior odds summaries.
 #'
 #' @param odds_type The desired posterior odds.
+#' @return \code{return_preset_odds_index} returns a list with indices for individual models and combinations of models.
 #' @export
 #' @examples return_preset_odds_index()
 return_preset_odds_index <- function(odds_type = c("mediation",
@@ -401,8 +411,16 @@ process_data <- function(y, M, X,
 #' by the relationship, specifically as odds, so 1 represents 50\% PVE.
 #' @param ln_prior_c DEFAULT: "complete". The prior log case probabilities. See model_info() for description of likelihoods and their
 #' combinations into cases. Simplified pre-set options are available, including "complete", "partial", and "reactive".
-#' @param align_data DEFAULT: TRUE. If TRUE, expect vector and matrix inputes to have names and rownames, respectively. The overlapping data
+#' @param align_data DEFAULT: TRUE. If TRUE, expect vector and matrix inputs to have names and rownames, respectively. The overlapping data
 #' will then be aligned, allowing the user to not have to reduce data to overlapping samples and order them.
+#' #' @return \code{bmediatR} returns a list containing the following components:
+#'  \item{ln_prob_data}{a matrix with likelihoods of each hypothesis H1-H8 for each candidate mediator.}
+#'  \item{ln_post_c}{a matrix with posterior probabilities of each causal model for each candidate mediator.}
+#'  \item{ln_post_odds}{a matrix with posterior odds of individual models or combinations of models for each candidate mediator.}
+#'  \item{ln_prior_c}{a single row matrix with posterior probabilities of each causal model.}
+#'  \item{ln_prior_odds}{a single row matrix with prior odds of individual models or combinations of models.}
+#'  \item{ln_ml}{the natural log of the marginal likelihood.}
+#' @note See examples in vignettes with \code{vignette("use_bmediatR", "bmediatR")} or \code{vignette("bmediatR_in_DO", "bmediatR")}.
 #' @export
 #' @examples bmediatR_v0()
 bmediatR_v0 <- function(y, M, X,
@@ -811,8 +829,16 @@ estimate_empirical_prior <- function(ln_prob_data,
 #' combinations into cases. Simplified pre-set options are available, including "complete", "partial", and "reactive".
 #' @param options_X DEFAULT: list(sum_to_zero = TRUE, center = FALSE, scale = FALSE). Optional transformations for the X design matrix. Sum_to_zero imposes
 #' a sum-to-zero contrast on the columns of X. Center sets the mean of each column to 0. Scale sets the variance of each column to 1.
-#' @param align_data DEFAULT: TRUE. If TRUE, expect vector and matrix inputes to have names and rownames, respectively. The overlapping data
+#' @param align_data DEFAULT: TRUE. If TRUE, expect vector and matrix inputs to have names and rownames, respectively. The overlapping data
 #' will then be aligned, allowing the user to not have to reduce data to overlapping samples and order them.
+#' @return \code{bmediatR} returns a list containing the following components:
+#'  \item{ln_prob_data}{a matrix with likelihoods of each hypothesis H1-H8 for each candidate mediator.}
+#'  \item{ln_post_c}{a matrix with posterior probabilities of each causal model for each candidate mediator.}
+#'  \item{ln_post_odds}{a matrix with posterior odds of individual models or combinations of models for each candidate mediator.}
+#'  \item{ln_prior_c}{a single row matrix with posterior probabilities of each causal model.}
+#'  \item{ln_prior_odds}{a single row matrix with prior odds of individual models or combinations of models.}
+#'  \item{ln_ml}{the natural log of the marginal likelihood.}
+#' @note See examples in vignettes with \code{vignette("use_bmediatR", "bmediatR")} or \code{vignette("bmediatR_in_DO", "bmediatR")}.
 #' @export
 #' @examples bmediatR()
 bmediatR <- function(y, M, X,
