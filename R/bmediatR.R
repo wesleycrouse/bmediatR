@@ -413,13 +413,15 @@ process_data <- function(y, M, X,
 #' combinations into cases. Simplified pre-set options are available, including "complete", "partial", and "reactive".
 #' @param align_data DEFAULT: TRUE. If TRUE, expect vector and matrix inputs to have names and rownames, respectively. The overlapping data
 #' will then be aligned, allowing the user to not have to reduce data to overlapping samples and order them.
-#' #' @return \code{bmediatR} returns a list containing the following components:
-#'  \item{ln_prob_data}{a matrix with likelihoods of each hypothesis H1-H8 for each candidate mediator.}
-#'  \item{ln_post_c}{a matrix with posterior probabilities of each causal model for each candidate mediator.}
-#'  \item{ln_post_odds}{a matrix with posterior odds of individual models or combinations of models for each candidate mediator.}
-#'  \item{ln_prior_c}{a single row matrix with posterior probabilities of each causal model.}
-#'  \item{ln_prior_odds}{a single row matrix with prior odds of individual models or combinations of models.}
-#'  \item{ln_ml}{the natural log of the marginal likelihood.}
+#' @return \code{bmediatR} returns a list containing the following components:
+#' \describe{
+#'  \item{\code{ln_prob_data}}{a matrix with likelihoods of each hypothesis H1-H8 for each candidate mediator.}
+#'  \item{\code{ln_post_c}}{a matrix with posterior probabilities of each causal model for each candidate mediator.}
+#'  \item{\code{ln_post_odds}}{a matrix with posterior odds of individual models or combinations of models for each candidate mediator.}
+#'  \item{\code{ln_prior_c}}{a single row matrix with posterior probabilities of each causal model.}
+#'  \item{\code{ln_prior_odds}}{a single row matrix with prior odds of individual models or combinations of models.}
+#'  \item{\code{ln_ml}}{the natural log of the marginal likelihood.}
+#' }
 #' @note See examples in vignettes with \code{vignette("use_bmediatR", "bmediatR")} or \code{vignette("bmediatR_in_DO", "bmediatR")}.
 #' @export
 #' @examples bmediatR_v0()
@@ -832,12 +834,14 @@ estimate_empirical_prior <- function(ln_prob_data,
 #' @param align_data DEFAULT: TRUE. If TRUE, expect vector and matrix inputs to have names and rownames, respectively. The overlapping data
 #' will then be aligned, allowing the user to not have to reduce data to overlapping samples and order them.
 #' @return \code{bmediatR} returns a list containing the following components:
-#'  \item{ln_prob_data}{a matrix with likelihoods of each hypothesis H1-H8 for each candidate mediator.}
-#'  \item{ln_post_c}{a matrix with posterior probabilities of each causal model for each candidate mediator.}
-#'  \item{ln_post_odds}{a matrix with posterior odds of individual models or combinations of models for each candidate mediator.}
-#'  \item{ln_prior_c}{a single row matrix with posterior probabilities of each causal model.}
-#'  \item{ln_prior_odds}{a single row matrix with prior odds of individual models or combinations of models.}
-#'  \item{ln_ml}{the natural log of the marginal likelihood.}
+#' \describe{
+#'  \item{\code{ln_prob_data}}{a matrix with likelihoods of each hypothesis H1-H8 for each candidate mediator.}
+#'  \item{\code{ln_post_c}}{a matrix with posterior probabilities of each causal model for each candidate mediator.}
+#'  \item{\code{ln_post_odds}}{a matrix with posterior odds of individual models or combinations of models for each candidate mediator.}
+#'  \item{\code{ln_prior_c}}{a single row matrix with posterior probabilities of each causal model.}
+#'  \item{\code{ln_prior_odds}}{a single row matrix with prior odds of individual models or combinations of models.}
+#'  \item{\code{ln_ml}}{the natural log of the marginal likelihood.}
+#' }
 #' @note See examples in vignettes with \code{vignette("use_bmediatR", "bmediatR")} or \code{vignette("bmediatR_in_DO", "bmediatR")}.
 #' @export
 #' @examples bmediatR()

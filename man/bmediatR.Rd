@@ -95,12 +95,14 @@ will then be aligned, allowing the user to not have to reduce data to overlappin
 }
 \value{
 \code{bmediatR} returns a list containing the following components:
- \item{ln_prob_data}{a matrix with likelihoods of each hypothesis H1-H8 for each candidate mediator.}
- \item{ln_post_c}{a matrix with posterior probabilities of each causal model for each candidate mediator.}
- \item{ln_post_odds}{a matrix with posterior odds of individual models or combinations of models for each candidate mediator.}
- \item{ln_prior_c}{a single row matrix with posterior probabilities of each causal model.}
- \item{ln_prior_odds}{a single row matrix with prior odds of individual models or combinations of models.}
- \item{ln_ml}{the natural log of the marginal likelihood.}
+\describe{
+ \item{\code{ln_prob_data}}{a matrix with likelihoods of each hypothesis H1-H8 for each candidate mediator.}
+ \item{\code{ln_post_c}}{a matrix with posterior probabilities of each causal model for each candidate mediator.}
+ \item{\code{ln_post_odds}}{a matrix with posterior odds of individual models or combinations of models for each candidate mediator.}
+ \item{\code{ln_prior_c}}{a single row matrix with posterior probabilities of each causal model.}
+ \item{\code{ln_prior_odds}}{a single row matrix with prior odds of individual models or combinations of models.}
+ \item{\code{ln_ml}}{the natural log of the marginal likelihood.}
+}
 }
 \description{
 This function takes an outcome (y), candidate mediators (M), and a driver as a design matrix (X) to perform a
