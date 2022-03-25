@@ -15,6 +15,13 @@ summary, the log prior case probabilities used with bmediatR() are stored in its
 \item{c_numerator}{The index of cases to be summed in the numerator of the posterior odds. Cases, their order, and likelihoods
 are provided in model_info().}
 }
+\value{
+\code{posterior_summary} returns a list containing the following components:
+ \item{ln_post_c}{a matrix with posterior probabilities of each causal model for each candidate mediator.}
+ \item{ln_post_odds}{a matrix with posterior odds of individual models or combinations of models for each candidate mediator.}
+ \item{ln_prior_odds}{a single row matrix with prior odds of individual models or combinations of models.}
+ \item{ln_ml}{the natural log of the marginal likelihood.}
+}
 \description{
 This function takes the log posterior probability of the data (posterior likelihood) for the various cases, the log prior case probabilities, and
 returns log posterior odds.

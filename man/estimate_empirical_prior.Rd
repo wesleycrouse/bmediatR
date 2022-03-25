@@ -9,7 +9,7 @@ estimate_empirical_prior(ln_prob_data, model = c("complete", "partial"))
 \arguments{
 \item{ln_prob_data}{Marginal likelihoods from bmediatR fit.}
 
-\item{model}{DEFAULT: "complete". If "complete", the marginal likelihoods evaluating the 
+\item{model}{DEFAULT: "complete". If "complete", the marginal likelihoods evaluating the
 effects of X on M and Y. If "partial" is specified, the effects of X on M and Y are fixed
 as present. A "reactive" mode is currently not supported because of the challenge in
 distinguishing the directionality of a relationship.}

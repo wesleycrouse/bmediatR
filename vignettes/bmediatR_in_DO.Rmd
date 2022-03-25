@@ -1,0 +1,450 @@
+---
+title: "Replicating Simple Example"
+author: "Madeleine S. Gastonguay"
+output: 
+   html_document:
+    code_folding: show
+    highlight: pygment
+    theme: yeti
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+vignette: >
+  %\VignetteIndexEntry{Replicating Simple Example}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# Overview
+
+In this vignette, we will demonstrate mediation analysis in the context of multi-allelic QTL analysis by simulating data based on the genomes of Diversity Outbred (DO) mice. This example is shown in figure 5 of the [manuscript](https://www.biorxiv.org/content/10.1101/2021.07.19.452969v2). We will simulate three common scenarios found in genetic mediation analysis: `M` is a non-mediator of `X` on `Y`, `M` and `Y` are independently driven by `X` (co-local), and `M` is a complete mediator of `X` on `Y`. In each setting, `Y` and `M` are simulated based on a bi-allelic QTL `X` at a randomly selected locus, with each allele distributed to four founder strains. For each example, we will examine the results of QTL mapping, compare the founder haplotype effects of the peak QTL for `Y` and `M`, and apply `bmediatR` to infer the relationship between the QTL, `M`, and `Y`.
+
+# Load Packages and Set up environment
+```{r, message=F}
+# devtools::install_github("wesleycrouse/bmediatR@add-vignettes", build_vignettes = T)
+library(bmediatR)
+library(qtl2)
+library(tidyverse)
+
+source("bmediatr_manuscript_support_functions.R")
+
+# CC colors
+cc_col <- as.character(qtl2::CCcolors)
+
+```
+
+# Download Data
+
+For this example, we will simulate data using the genomes of 192 DO mice. We first need to download them from the manuscript [figshare](https://figshare.com/articles/dataset/Data_and_code_for_Bayesian_model_selection_manuscript/14912484). This step will take a few minutes, and it may be necessary to adjust the length of timeout using the `options` function.
+
+```{r, eval = F}
+# Figshare file containing data used in manuscript
+id_data <- 14912484
+download_url <- rfigshare::fs_details(id_data, mine = F, session = NULL)$files[[4]]$download_url
+
+# Download data
+options(timeout = max(300, getOption("timeout")))
+download.file(download_url, "vignette_data.RData.zip", method = "libcurl")
+
+# Load DO genoprobs, map, and kinship matrix 
+load(unzip("vignette_data.RData.zip"))
+
+# Clean up
+file.remove("vignette_data.RData.zip")
+```
+
+```{r, include = F}
+# To reduce package download time, the previous code chunk is not run in the vignette 
+# and we will load pre-saved results for this example.
+load("presaved_DO_data.RData")
+```
+
+
+# Non-mediator simulation
+bmediatR includes built-in functions to help simulate data from a multi-parental population (MPP) such as the Collaborative Cross (CC) or Diversity Outbred (DO) mice. Below, we randomly select a genetic locus `X` and simulate `M` and `Y` such that `X` explains 30% of the variance in `Y`, but does not influence `M`.
+
+<center>
+
+![ DAG representing the non-mediator simulation.](other_nonmed_DAG.png)
+
+</center>
+
+```{r, eval = F}
+# set seed
+set.seed(50)
+
+null_m <- sim_mpp_data(genoprobs = genoprobs,
+                       map = map,
+                       qtl_effect_size = 0,
+                       num_replicates = 1,
+                       num_sim = 1,
+                       vary_locus = TRUE,
+                       sim_label = "null_m")
+
+null_y <- sim_mpp_data(genoprobs = genoprobs,
+                       map = map,
+                       qtl_effect_size = 0.3,
+                       num_replicates = 1,
+                       num_sim = 1,
+                       M_ID = "0,0,0,0,1,1,1,1",
+                       beta = c(0, 1),
+                       vary_locus = FALSE,
+                       sim_label = "null_y",
+                       impute = FALSE)
+
+```
+
+### QTL mapping for `M` and `Y`
+
+We will run a QTL scan for `M` and `Y` to illustrate a scenario that frequently arises in genetics.
+
+```{r, eval = F}
+null_m_scan <- scan1(genoprobs = genoprobs,
+                     pheno = null_m$data,
+                     kinship = K)
+null_y_scan <- scan1(genoprobs = genoprobs,
+                     pheno = null_y$data, 
+                     kinship = K)
+```
+
+```{r, out.width="100%"}
+plot_scan1(null_m_scan, map = map, 
+           col = "black", altcol = "gray30", 
+           bgcol = "white", altbgcol = "white",
+           main = "No QTL for M",
+           ylim = c(0, max(null_y_scan) + 1))
+plot_scan1(null_y_scan, map = map, 
+           col = "black", altcol = "gray30", 
+           bgcol = "white", altbgcol = "white",
+           main = "QTL for Y",
+           ylim = c(0, max(null_y_scan) + 1))
+
+```
+
+Next, we will compare the allele effects of `X` on `M` and `Y`, and see that they are uncorrelated as we would expect in a non-mediation setting.
+
+```{r, eval = F}
+# Find peak QTL for Y
+null_y_qtl <- find_peaks(null_y_scan, map = map) %>%
+  filter(lod == max(lod))
+
+# Pull location and genoprob matrix of QTL for Y
+null_qtl_chr <- null_y_qtl$chr
+null_qtl_genoprobs <- pull_genoprobpos(genoprobs, map, 
+                                       chr = null_qtl_chr, pos = null_y_qtl$pos)
+
+# QTL effects for Y
+null_y_qtl_effects <- fit1(genoprobs = null_qtl_genoprobs,
+                           pheno = null_y$data,
+                           K = K[[null_qtl_chr]],
+                           blup = T)
+
+# QTL effects for M
+null_m_qtl_effects <- fit1(genoprobs = null_qtl_genoprobs,
+                           pheno = null_m$data,
+                           K = K[[null_qtl_chr]],
+                           blup = F)
+
+# Merging effects data
+null_qtl_effects <- cbind(null_y_qtl_effects$coef, null_y_qtl_effects$SE,
+                          null_m_qtl_effects$coef, null_m_qtl_effects$SE) %>% 
+  as.data.frame %>% setNames(c("y_effect", "y_SE", "m_effect", "m_SE")) %>% 
+  rownames_to_column("strain") %>% slice(1:8) 
+```
+
+Plot allele effects:
+```{r}
+# Plot
+effects_w_ci_plot(null_qtl_effects) 
+```
+
+
+### Apply Bayesian model selection
+
+We will apply bmediatR using the `complete` prior model setting because we regard the models with reverse causality as implausible in this setting. 
+
+```{r}
+null_med_complete <- bmediatR(
+  y = null_y$data, 
+  M = null_m$data, 
+  X = null_qtl_genoprobs,
+  ln_prior_c = "complete"
+)
+
+# Plot
+plot_posterior_bar(
+  null_med_complete, 
+  mediator_id = "null_m_1", 
+  relabel_x = "M", 
+  add_number_labels = TRUE, 
+  num_dig = 2
+)
+```
+
+The results of `bmediatR` show that all the posterior model probability is placed on an other non-mediation model. These results align with our expectation for a non-mediation simulation. In fact, the data generating model `(0,0,1)`, is given a posterior probability of 0.93:
+
+```{r}
+exp(null_med_complete$ln_post_c)
+```
+
+
+# Co-local Simulation
+For the co-local simulations, we selected a random genetic locus `X` and independently simulated `M` and `Y` based on an effect size of 0.3. 
+
+<center>
+
+![DAG representing the co-local simulation.](colocal_DAG.png)
+
+</center>
+
+```{r, eval = F}
+set.seed(100)
+colocal <- sim_mpp_data(genoprobs = genoprobs,
+                        map = map,
+                        qtl_effect_size = 0.3,
+                        num_replicates = 1,
+                        num_sim = 2,
+                        M_ID = "0,0,0,0,1,1,1,1",
+                        beta = c(0, 1),
+                        vary_locus = FALSE,
+                        sim_label = "colocal_y",
+                        impute = FALSE)
+colocal_m <- colocal$data[,1, drop = FALSE]
+colocal_y <- colocal$data[,2, drop = FALSE]
+```
+
+### QTL mapping for `M` and `Y`
+We will run a QTL scan for `M` and `Y` to demonstrate that the candidate mediator and target have co-mapping QTL.
+```{r, eval = F}
+colocal_m_scan <- scan1(genoprobs = genoprobs,
+                        pheno = colocal_m,
+                        kinship = K)
+colocal_y_scan <- scan1(genoprobs = genoprobs,
+                        pheno = colocal_y,
+                        kinship = K)
+```
+
+
+```{r, out.width="100%"}
+ymax <- max(c(max(colocal_m_scan), max(colocal_y_scan)) + 1)
+plot_scan1(colocal_m_scan, map = map,
+           col = "black", altcol = "gray30",
+           bgcol = "white", altbgcol = "white",
+           main = "QTL for M",
+           ylim = c(0, ymax))
+plot_scan1(colocal_y_scan, map = map,
+           col = "black", altcol = "gray30",
+           bgcol = "white", altbgcol = "white",
+           main = "QTL for Y",
+           ylim = c(0, ymax))
+```
+
+Next, we will compare the allele effects of `X` on `M` and `Y`, and see that they are correlated even though the QTL influences them indpendently. 
+```{r, eval = F}
+# Find peak QTL for Y
+colocal_y_qtl <- find_peaks(colocal_y_scan, map = map) %>%
+  filter(lod == max(lod))
+
+# Pull location and genoprob matrix of QTL for Y
+colocal_y_qtl_chr <- colocal_y_qtl$chr
+colocal_y_qtl_genoprobs <- pull_genoprobpos(genoprobs, map, 
+                                       chr = colocal_y_qtl_chr, pos = colocal_y_qtl$pos)
+
+# QTL effects for Y
+colocal_y_qtl_effects <- fit1(genoprobs = colocal_y_qtl_genoprobs,
+                           pheno = colocal_y,
+                           K = K[[colocal_y_qtl_chr]],
+                           blup = T)
+
+# Find peak QTL for M
+colocal_m_qtl <- find_peaks(colocal_m_scan, map = map) %>%
+  filter(lod == max(lod))
+colocal_m_qtl_chr <- colocal_m_qtl$chr
+colocal_m_qtl_genoprobs <- pull_genoprobpos(genoprobs, map, 
+                                       chr = colocal_m_qtl_chr, pos = colocal_m_qtl$pos)
+
+# QTL effects for M
+colocal_m_qtl_effects <- fit1(genoprobs = colocal_m_qtl_genoprobs,
+                           pheno = colocal_m,
+                           K = K[[colocal_m_qtl_chr]],
+                           blup = T)
+
+# Merging effects data
+colocal_qtl_effects <- cbind(colocal_y_qtl_effects$coef, colocal_y_qtl_effects$SE,
+                          colocal_m_qtl_effects$coef, colocal_m_qtl_effects$SE) %>% 
+  as.data.frame %>% setNames(c("y_effect", "y_SE", "m_effect", "m_SE")) %>% 
+  rownames_to_column("strain") %>% slice(1:8) 
+
+```
+
+
+```{r}
+# Plot
+effects_w_ci_plot(colocal_qtl_effects)
+```
+
+
+### Apply Bayesian model selection
+
+We will apply bmediatR using the `complete` prior model setting because we regard the models with reverse causality as implausible in this setting.
+
+```{r}
+colocal_med_complete <- bmediatR(
+  y = colocal_y,
+  M = colocal_m,
+  X = colocal_y_qtl_genoprobs,
+  ln_prior_c = "complete"
+)
+
+# Plot
+plot_posterior_bar(
+  colocal_med_complete,
+  mediator_id = "colocal_y_1",
+  relabel_x = "M",
+  add_number_labels = TRUE,
+  num_dig = 2
+)
+
+```
+
+The results of `bmediatR` show that the co-local model receives the majority (0.76) of the posterior probability, with the partial mediation mode receiving the rest (0.24). This demonstrates the method’s ability to distinguish between complete mediation and co-local relationships, even when allele effects are correlated.
+
+# Complete Mediation Simulation
+In the final scenario, we will simulate complete mediation. First, we randomly select a genetic locus `X` and simulate `M` with a 30% QTL mapping to `X`. Then, we simulate `Y` such that `M` explains 70% of the variance in `Y`. 
+
+<center>
+
+![DAG representing the complete mediation simulation.](mediation_DAG.png)
+
+</center>
+
+```{r, eval = F}
+# set seed
+set.seed(60)
+
+complete_m <- sim_mpp_data(genoprobs = genoprobs,
+                           map = map,
+                           qtl_effect_size = 0.3,
+                           num_replicates = 1,
+                           num_sim = 1,
+                           M_ID = "0,0,0,0,1,1,1,1",
+                           beta = c(0, 1),
+                           vary_locus = FALSE,
+                           sim_label = "complete_m",
+                           impute = FALSE)
+
+complete_y <- sim_target_from_mediator(M = complete_m$data, mediator_effect_size = 0.7, sim_label = "complete_y")
+
+```
+
+### QTL mapping for `M` and `Y`
+We will run a QTL scan for `M` and `Y` to show that they co-map to a QTL on chromosome 6.
+```{r, eval = F}
+complete_m_scan <- scan1(genoprobs = genoprobs,
+                         pheno = complete_m$data,
+                         kinship = K)
+complete_y_scan <- scan1(genoprobs = genoprobs,
+                         pheno = complete_y$data,
+                         kinship = K)
+```
+
+
+```{r, out.width="100%"}
+ymax <- max(c(max(complete_m_scan), max(complete_y_scan)) + 1)
+plot_scan1(complete_m_scan, map = map,
+           col = "black", altcol = "gray30",
+           bgcol = "white", altbgcol = "white",
+           main = "QTL for M",
+           ylim = c(0, ymax))
+plot_scan1(complete_y_scan, map = map,
+           col = "black", altcol = "gray30",
+           bgcol = "white", altbgcol = "white",
+           main = "QTL for Y",
+           ylim = c(0, ymax))
+```
+
+The founder haplotype effects for the peak QTL on `M` and `Y` are strongly correlated.
+
+```{r, eval = F}
+# Find peak QTL for Y
+complete_y_qtl <- find_peaks(complete_y_scan, map = map) %>%
+  filter(lod == max(lod))
+
+# Pull location and genoprob matrix of QTL for Y
+complete_y_qtl_chr <- complete_y_qtl$chr
+complete_y_qtl_genoprobs <- pull_genoprobpos(genoprobs, map, 
+                                       chr = complete_y_qtl_chr, pos = complete_y_qtl$pos)
+
+# QTL effects for Y
+complete_y_qtl_effects <- fit1(genoprobs = complete_y_qtl_genoprobs,
+                           pheno = complete_y$data,
+                           K = K[[complete_y_qtl_chr]],
+                           blup = T)
+
+# Find peak QTL for M
+complete_m_qtl <- find_peaks(complete_m_scan, map = map) %>%
+  filter(lod == max(lod))
+complete_m_qtl_chr <- complete_m_qtl$chr
+complete_m_qtl_genoprobs <- pull_genoprobpos(genoprobs, map, 
+                                       chr = complete_m_qtl_chr, pos = complete_m_qtl$pos)
+
+# QTL effects for M
+complete_m_qtl_effects <- fit1(genoprobs = complete_m_qtl_genoprobs,
+                           pheno = complete_m$data,
+                           K = K[[complete_m_qtl_chr]],
+                           blup = T)
+
+# Merging effects data
+complete_qtl_effects <- cbind(complete_y_qtl_effects$coef, complete_y_qtl_effects$SE,
+                          complete_m_qtl_effects$coef, complete_m_qtl_effects$SE) %>% 
+  as.data.frame %>% setNames(c("y_effect", "y_SE", "m_effect", "m_SE")) %>% 
+  rownames_to_column("strain") %>% slice(1:8) 
+
+```
+
+```{r}
+# Plot
+effects_w_ci_plot(complete_qtl_effects)
+```
+
+### Apply Bayesian model selection
+
+```{r}
+complete_med_complete <- bmediatR(
+  y = complete_y$data,
+  M = complete_m$data,
+  X = complete_y_qtl_genoprobs,
+  ln_prior_c = "complete"
+)
+
+# Plot
+plot_posterior_bar(
+  complete_med_complete,
+  mediator_id = "complete_m_1",
+  relabel_x = "M",
+  add_number_labels = TRUE,
+  num_dig = 2
+)
+```
+
+The results of bmediatR show that the complete mediation model is given a posterior probability of 1, which aligns with our expectations.
+
+
+<!-- ```{r, include = F, eval = F} -->
+<!-- # Save results to compile the vignette quickly -->
+<!-- save(map,  -->
+<!--      null_m, null_y, null_m_scan, null_y_scan, null_y_qtl, null_m_qtl, null_qtl_effects, null_qtl_genoprobs,  -->
+<!--      colocal_m, colocal_y, colocal_m_scan, colocal_y_scan, colocal_y_qtl, colocal_m_qtl, colocal_qtl_effects, colocal_y_qtl_genoprobs, colocal_m_qtl_genoprobs,  -->
+<!--      complete_m, complete_y, complete_m_scan, complete_y_scan, complete_y_qtl, complete_m_qtl, complete_qtl_effects, complete_y_qtl_genoprobs, complete_m_qtl_genoprobs,  -->
+<!--      file = "presaved_DO_data.RData") -->
+<!-- ``` -->
+
