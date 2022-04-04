@@ -29,7 +29,7 @@ bmediatR is an R package implementing a Bayesian model selection approach to med
 
 # Installing from Github and Loading the Package
 ```{r, message=FALSE}
-devtools::install_github("wesleycrouse/bmediatR@add-vignettes", build_vignettes = T)
+devtools::install_github("wesleycrouse/bmediatR", build_vignettes = T)
 library(bmediatR)
 library(tidyverse)
 ```

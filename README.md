@@ -4,10 +4,10 @@ A Bayesian model selection approach for mediation analysis.
 
 ## Example
 
-The following code services as a simple vignette for using the package.
+The following code services as a simple vignette for using the package. The package contains two more detailed vignettes for user guidance.
 
 ``` r
-devtools::install_github("wesleycrouse/bmediatR")
+devtools::install_github("wesleycrouse/bmediatR", build_vignettes = TRUE)
 library(bmediatR)
 
 ## Simulate Collaborative Cross data

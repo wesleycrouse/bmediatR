@@ -30,7 +30,7 @@ In this vignette, we will demonstrate mediation analysis in the context of multi
 
 # Load Packages and Set up environment
 ```{r, message=F}
-# devtools::install_github("wesleycrouse/bmediatR@add-vignettes", build_vignettes = T)
+devtools::install_github("wesleycrouse/bmediatR", build_vignettes = T)
 library(bmediatR)
 library(qtl2)
 library(tidyverse)
