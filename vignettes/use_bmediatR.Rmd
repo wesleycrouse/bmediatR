@@ -272,17 +272,18 @@ Alternatively, the user can re-weight prior model probabilities as desired. Supp
 
 ```{r}
 # Start with a prior probability of zero for each model
-ln_prior_c <- rep(0, 12)
-ln_prior_c[1:8] <- (1 - 0.01)/7
+prior_c <- rep(0, 12)
+# Give each of the 7 models in "complete" prior an equal probability
+prior_c[1:8] <- (1 - 0.01)/7
 # Assign complete mediation model a probability of 0.01
-ln_prior_c[return_preset_odds_index()$complete] <- 0.01
-ln_prior_c
+prior_c[return_preset_odds_index()$complete] <- 0.01
+prior_c
 
 # The sum of model probabilities needs to equal 1
-sum(ln_prior_c)
+sum(prior_c)
 
 # take the log of the prior
-ln_prior_c <- log(ln_prior_c)
+ln_prior_c <- log(prior_c)
 
 med_results_updated_custom <- posterior_summary(
   ln_prob_data = med_results$ln_prob_data,
@@ -296,4 +297,4 @@ plot_posterior_bar(med_results_updated_custom, mediator_id = "sim_m_1",
 
 ```
 
-With the updated prior, the partial mediation model now has the greatest posterior probability.
+With the updated prior, the complete mediation model has a lower probability and the partial mediation model has the greatest posterior probability.
