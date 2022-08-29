@@ -2,6 +2,8 @@
 
 A Bayesian model selection approach for mediation analysis. 
 
+Read the [manuscript](https://doi.org/10.1371/journal.pgen.1010184), published in *PLOS Genetics*.
+
 ## Example
 
 The following code services as a simple vignette for using the package. The package contains two more detailed vignettes for user guidance.
