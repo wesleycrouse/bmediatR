@@ -306,7 +306,7 @@ plot_posterior_odds <- function(bmediatR_object,
   }
   med_map <- map_df_to_list(map = med_map_df, marker_column = med_var, pos_column = "middle")
   
-  gap <- sum(qtl2::chr_lengths(map))/100
+  gap <- sum(qtl2::chr_lengths(med_map))/100
   
   lim_shift <- (max(post_odds[,1]) - min(post_odds[,1])) * expand_lim_factor
   
