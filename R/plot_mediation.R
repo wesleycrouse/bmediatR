@@ -256,7 +256,14 @@ plot_prior_bar <- function(bmediatR_object,
 #' @param bmediatR_object Output from bmediatR(). 
 #' @param model_type DEFAULT: "mediation". Specifies which model(s)'s posterior probabilities are to be included in the numerator of the posterior odds and then displayed for
 #' for genome-wide mediators. 
-#' @param med_annot Annotation data for -omic mediators.
+#' @param med_annot Annotation data for -omic mediators. This data provides the coordinate for plotting the mediation odds summary and is expected as a data.frame with the following variables:
+#' \itemize{
+#' \item{"med_var identifier variable"}{Mediator IDs (e.g., ENSEMBL gene IDs) that uniquely identify evaluated mediators. Colname should match the med_var argument and the IDs in bmediatR_object.}
+#' \item{"symbol"}{Alternative IDs that are more readily meaningful to humans (e.g., gene symbols). DO not have to be unique.}
+#' \item{"chr"}{Chromosome of the candidate mediator.}
+#' \item{"middle"}{Genomic coordinate of the candidate mediator (e.g., midpoint of a coding gene).}
+#' }
+#' @param med_var Colname of unique identifier for candidate mediators (e.g., ENSEMBL gene IDs) in med_annot data.frame. Should match IDs in bmediatR_object. 
 #' @param include_chr DEFAULT: c(1:19, "X"). Chromosomes to include in plot.
 #' @param expland_lim_factor DEFAULT: 0.025. Scale to increase plot limits by.
 #' @param label_thresh DEFAULT: NULL. Label mediators that surpass label_thresh. Default does not add labels.
